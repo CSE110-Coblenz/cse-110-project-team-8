@@ -29,23 +29,23 @@ function renderLeaderboard() {
 
 function setupInteractions() {
   document.getElementById("mainPlayBtn")?.addEventListener("click", () => {
-    alert("🎮 Starting VimBeat... Get ready to code in rhythm!");
+    alert("Starting game");
   });
 
   document.getElementById("leaderboardBtn")?.addEventListener("click", () => {
-    alert("🏆 Viewing full leaderboards...");
+    alert("Viewing full leaderboards");
   });
 
   document.getElementById("settingsBtn")?.addEventListener("click", () => {
-    alert("⚙️ Opening settings...");
+    alert("Opening settings");
   });
 
   document.getElementById("aboutBtn")?.addEventListener("click", () => {
-    alert("ℹ️ VimBeat: Master the Rhythm, Master the Code.");
+    alert("Game introduction");
   });
 
   document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    alert("👋 Logged out successfully.");
+    alert("Logged out successfully");
   });
 }
 
