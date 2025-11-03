@@ -1,15 +1,11 @@
-interface Player {
-  rank: number;
-  name: string;
-  score: number;
-}
+import { Player } from "./player.js";
 
 const leaderboard: Player[] = [
-  { rank: 1, name: "VimMaster99", score: 1234 },
-  { rank: 2, name: "CodeRhythm", score: 1189 },
-  { rank: 3, name: "KeyNinja", score: 889 },
-  { rank: 4, name: "BeatCoder", score: 791 },
-  { rank: 5, name: "RhythmDev", score: 23 },
+  new Player({ rank: 1, name: "VimMaster99", score: 1234 }),
+  new Player({ rank: 2, name: "CodeRhythm", score: 1189 }),
+  new Player({ rank: 3, name: "KeyNinja", score: 889 }),
+  new Player({ rank: 4, name: "BeatCoder", score: 791 }),
+  new Player({ rank: 5, name: "RhythmDev", score: 23 }),
 ];
 
 function renderLeaderboard() {
@@ -17,13 +13,7 @@ function renderLeaderboard() {
   if (!tbody) return;
   tbody.innerHTML = "";
   leaderboard.forEach((p) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${p.rank}</td>
-      <td>${p.name}</td>
-      <td>${p.score.toLocaleString()}</td>
-    `;
-    tbody.appendChild(row);
+    tbody.appendChild(p.renderRow());
   });
 }
 
