@@ -1,5 +1,5 @@
 import Konva from "konva";
-import VimGrid from "../model/VimGrid";
+import VimGrid from "./VimGrid.js";
 
 export class GridView {
     private group: Konva.Group;
@@ -126,3 +126,4 @@ export class GridView {
         return this.group;
     }
 }
+

@@ -6,12 +6,13 @@
   "version": "1.0.0",
   "description": "Fresh repository with main branch.",
   "main": "index.js",
-   "scripts": {
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
-  }
-  ,
+    "preview": "vite preview",
+    "start": "vite"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/CSE110-Coblenz/cse-110-project-team-8.git"
@@ -24,6 +25,7 @@
   },
   "homepage": "https://github.com/CSE110-Coblenz/cse-110-project-team-8#readme",
   "devDependencies": {
+    "@types/node": "^24.9.2",
     "typescript": "^5.9.3",
     "vite": "^7.1.12"
   }
