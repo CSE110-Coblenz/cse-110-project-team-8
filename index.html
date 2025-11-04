@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VimBeat</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">VimBeat</div>
+    <nav>
+      <button class="nav-btn" id="playBtn">Play Game</button>
+      <button class="nav-btn" id="leaderboardBtn">Leaderboards</button>
+      <button class="nav-btn" id="settingsBtn">Settings</button>
+      <button class="nav-btn" id="aboutBtn">About</button>
+    </nav>
+    <div class="user-info">
+      <div class="avatar"></div>
+      <div>
+        <div class="username">VimMaster99</div>
+        <div class="stats">Score: 1,234 | Level: 7</div>
+        <button id="logoutBtn" class="logout">Log Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+<section class="hero">
+  <h1>VimBeat</h1>
+  <p>Master the Rhythm, Master the Code.</p>
+  <div class="vim-window">
+    <div class="vim-titlebar">
+      <div class="vim-dot red"></div>
+      <div class="vim-dot yellow"></div>
+      <div class="vim-dot green"></div>
+      <span class="vim-title">VIM — ~/vimbeat/main.c</span>
+    </div>
+    <div class="vim-code">
+      <pre>
+<span class="comment">// VimBeat rhythm engine</span>
+<span class="keyword">function</span> <span class="func">hitNote</span>(<span class="var">key</span>) {
+  <span class="keyword">if</span> (<span class="var">key</span> === <span class="string">'j'</span>) {
+    <span class="func">playBeat</span>();
+    <span class="func">increaseScore</span>();
+  }
+}
+<span class="cursor">▋</span>
+      </pre>
+    </div>
+  </div>
+  <button id="mainPlayBtn" class="cta-btn">Let's Play!</button>
+</section>
+
+    <section class="leaderboard">
+      <h2>Top Players This Week</h2>
+      <table id="leaderboardTable">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player Name</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dynamic content injected by main.ts -->
+        </tbody>
+      </table>
+      <button id="viewAllBtn" class="secondary-btn">View All Leaderboards</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 VimBeat. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+    </div>
+  </footer>
+
+  <script src="src/main.ts" type="module"></script>
+</body>
+</html>
