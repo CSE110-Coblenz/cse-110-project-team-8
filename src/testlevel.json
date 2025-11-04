@@ -1,0 +1,16 @@
+{
+    "keyframes": [
+      {
+        "tMs": 0,
+        "state": ["abc", "def", "ghi"]
+      },
+      {
+        "tMs": 500,
+        "state": ["Abc", "Def", "Ghi"]
+      },
+      {
+        "tMs": 1000,
+        "state": ["aBc", "deF", "ghi"]
+      }
+    ]
+  }
