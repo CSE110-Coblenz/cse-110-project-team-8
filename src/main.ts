@@ -1,6 +1,6 @@
 import Konva from "konva";
-import VimGrid from "./VimScreen/model/VimGrid";
-import { GridView } from "./VimScreen/view/GridView"; // adjust path if different
+import VimGrid from "./VimGrid.js";
+import { GridView } from "./GridView.js";
 
 // Fullscreen Konva stage
 const stage = new Konva.Stage({

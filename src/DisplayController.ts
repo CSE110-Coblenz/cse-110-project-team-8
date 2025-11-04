@@ -1,5 +1,5 @@
-import VimGrid from "../model/VimGrid";
-import { GridView } from "../view/GridView";
+import VimGrid from "./VimGrid.js";
+import { GridView } from "./GridView.js";
 
 export default class DisplayController {
   private blinkTimer?: number;
@@ -7,27 +7,25 @@ export default class DisplayController {
 
   constructor(
     private grid: VimGrid,
-    private view: GridView,
-    private cursor = { row: 0, col: 0 }
+    private view: GridView
   ) {
     // initial paint
     this.view.update(this.grid);
-    this.view.setCursor(this.cursor.row, this.cursor.col);
+    const cursor = this.grid.getCursor();
+    this.view.setCursor(cursor.row, cursor.col);
   }
 
   /** Movement (clamped) */
   moveCursorBy(dr: number, dc: number) {
-    const r = Math.max(0, Math.min(this.grid.numRows - 1, this.cursor.row + dr));
-    const c = Math.max(0, Math.min(this.grid.numCols - 1, this.cursor.col + dc));
-    this.cursor = { row: r, col: c };
-    this.view.setCursor(r, c);
+    this.grid.moveCursorBy(dr, dc);
+    const cursor = this.grid.getCursor();
+    this.view.setCursor(cursor.row, cursor.col);
   }
 
   moveCursorTo(r: number, c: number) {
-    const nr = Math.max(0, Math.min(this.grid.numRows - 1, r));
-    const nc = Math.max(0, Math.min(this.grid.numCols - 1, c));
-    this.cursor = { row: nr, col: nc };
-    this.view.setCursor(nr, nc);
+    this.grid.setCursor(r, c);
+    const cursor = this.grid.getCursor();
+    this.view.setCursor(cursor.row, cursor.col);
   }
 
   /** Blink lifecycle */
@@ -55,5 +53,6 @@ export default class DisplayController {
   }
 
   /** Expose cursor (if needed elsewhere) */
-  getCursor() { return { ...this.cursor }; }
+  getCursor() { return this.grid.getCursor(); }
 }
+
