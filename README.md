@@ -2,17 +2,27 @@
 
 ## Dependencies
 
+### Runtime Dependencies
+- `konva` - 2D canvas library for animations and interactions
+
 ### Development Dependencies
 - `typescript` - TypeScript compiler
 - `vite` - Build tool and dev server
-- `@types/node` - TypeScript types for Node.js
-- `lite-server` - Lightweight development server
+
+## Prerequisites
+
+- Node.js (v14 or higher)
+- npm (comes with Node.js)
 
 ## Installation
+
+Install all dependencies:
 
 ```bash
 npm install
 ```
+
+This command automatically installs all runtime and development dependencies defined in `package.json`.
 
 ## Running
 

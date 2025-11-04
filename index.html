@@ -5,6 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VimBeat</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    #game-root {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      z-index: 1000;
+    }
+    #game-root.active {
+      display: block;
+    }
+    body.game-active main,
+    body.game-active header,
+    body.game-active footer {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <header class="navbar">
@@ -26,18 +45,18 @@
   </header>
 
   <main>
-<section class="hero">
-  <h1>VimBeat</h1>
-  <p>Master the Rhythm, Master the Code.</p>
-  <div class="vim-window">
-    <div class="vim-titlebar">
-      <div class="vim-dot red"></div>
-      <div class="vim-dot yellow"></div>
-      <div class="vim-dot green"></div>
-      <span class="vim-title">VIM — ~/vimbeat/main.c</span>
-    </div>
-    <div class="vim-code">
-      <pre>
+    <section class="hero">
+      <h1>VimBeat</h1>
+      <p>Master the Rhythm, Master the Code.</p>
+      <div class="vim-window">
+        <div class="vim-titlebar">
+          <div class="vim-dot red"></div>
+          <div class="vim-dot yellow"></div>
+          <div class="vim-dot green"></div>
+          <span class="vim-title">VIM — ~/vimbeat/main.c</span>
+        </div>
+        <div class="vim-code">
+          <pre>
 <span class="comment">// VimBeat rhythm engine</span>
 <span class="keyword">function</span> <span class="func">hitNote</span>(<span class="var">key</span>) {
   <span class="keyword">if</span> (<span class="var">key</span> === <span class="string">'j'</span>) {
@@ -46,11 +65,11 @@
   }
 }
 <span class="cursor">▋</span>
-      </pre>
-    </div>
-  </div>
-  <button id="mainPlayBtn" class="cta-btn">Let's Play!</button>
-</section>
+          </pre>
+        </div>
+      </div>
+      <button id="mainPlayBtn" class="cta-btn">Let's Play!</button>
+    </section>
 
     <section class="leaderboard">
       <h2>Top Players This Week</h2>
@@ -77,6 +96,9 @@
       <a href="#">Terms of Service</a>
     </div>
   </footer>
+
+  <!-- Game container (hidden initially) -->
+  <div id="game-root"></div>
 
   <script src="src/main.ts" type="module"></script>
 </body>

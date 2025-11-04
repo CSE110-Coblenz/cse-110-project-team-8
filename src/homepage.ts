@@ -18,10 +18,8 @@ function renderLeaderboard() {
 }
 
 function setupInteractions() {
-  document.getElementById("mainPlayBtn")?.addEventListener("click", () => {
-    alert("Starting game");
-  });
-
+  // mainPlayBtn is handled in main.ts to start the game
+  
   document.getElementById("leaderboardBtn")?.addEventListener("click", () => {
     alert("Viewing full leaderboards");
   });
