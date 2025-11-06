@@ -1,12 +1,12 @@
 {
-    "compilerOptions": {
-      "target": "ESNext",
-      "module": "ESNext",
-      "moduleResolution": "bundler",
-      "esModuleInterop": true,
-      "strict": true,
-      "jsx": "preserve",
-      "lib": ["ESNext", "DOM", "DOM.Iterable"]
-    },
-    "include": ["src"]
-  }
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "strict": true,
+    "jsx": "preserve",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src"]
+}
