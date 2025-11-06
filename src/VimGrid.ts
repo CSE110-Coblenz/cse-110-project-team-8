@@ -71,3 +71,4 @@ export default class VimGrid {
         this.cursor = { row: r, col: c };
     }
   }
+

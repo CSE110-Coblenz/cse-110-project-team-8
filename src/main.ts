@@ -1,34 +1,72 @@
-import { Level } from "./level.js";
-import VimGrid from "./vimgrid.js";
+import { initHomepage } from "./homepage.js";
+import Konva from "konva";
+import VimGrid from "./VimGrid.js";
+import { GridView } from "./GridView.js";
 
-const level = await Level.fromFile("/src/testlevel.json");
+let stage: Konva.Stage | null = null;
+let gameInitialized = false;
 
-// Get keyframes as VimGrid instances
-const keyframeGrids = level.getKeyframesAsVimGrids();
+function startGame() {
+  // Hide homepage UI
+  document.body.classList.add("game-active");
+  
+  // Show game container
+  const gameRoot = document.getElementById("game-root");
+  if (!gameRoot) return;
+  gameRoot.classList.add("active");
 
-// Display each keyframe using VimGrid
-for (const { tMs, grid } of keyframeGrids) {
-  console.log(`t=${tMs}ms`);
-  const gridData = grid.getGrid();
-  for (const row of gridData) {
-    const rowStr = row.map(cell => cell.ch).join("");
-    console.log(`  ${rowStr}`);
+  // Initialize Konva stage if not already done
+  if (!gameInitialized) {
+    stage = new Konva.Stage({
+      container: "game-root",
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+
+    const layer = new Konva.Layer();
+    stage.add(layer);
+
+    // Create your VimGrid (model)
+    const grid = VimGrid.createGridFromText([
+      "function hello() {",
+      "  console.log('vim rhythm!')",
+      "}",
+      "",
+      ":wq",
+    ]);
+
+    // Create the view (VimGridView)
+    const view = new GridView(grid);
+    layer.add(view.getGroup());
+    layer.draw();
+
+    // Animate cursor movement for demo
+    let row = 0, col = 0;
+    setInterval(() => {
+      view.setCursor(row, col);
+      col = (col + 1) % grid.numCols;
+      if (col === 0) row = (row + 1) % grid.numRows;
+    }, 250);
+
+    gameInitialized = true;
   }
-  console.log();
 }
 
-console.log("Pairwise comparisons:\n");
-
-// Compare all pairs of keyframes
-for (let i = 0; i < keyframeGrids.length; i++) {
-  for (let j = 0; j <= i; j++) {
-    const a = keyframeGrids[i];
-    const b = keyframeGrids[j];
-
-    const score = Level.score(a.grid, b.grid);
-
-    console.log(
-      `Keyframe ${i} (${a.tMs}ms) <-> ${j} (${b.tMs}ms): ${score} points`
-    );
+// Initialize homepage on load
+document.addEventListener("DOMContentLoaded", () => {
+  initHomepage();
+  
+  // Override the mainPlayBtn to start the game
+  const mainPlayBtn = document.getElementById("mainPlayBtn");
+  if (mainPlayBtn) {
+    mainPlayBtn.addEventListener("click", startGame);
   }
-}
+  
+  // Also handle window resize
+  window.addEventListener("resize", () => {
+    if (stage) {
+      stage.width(window.innerWidth);
+      stage.height(window.innerHeight);
+    }
+  });
+});
