@@ -1,10 +1,8 @@
-import { readFile } from "fs/promises";
-
-export type Grid = string[];
+import VimGrid from "./vimgrid.js";
 
 export interface Keyframe {
   tMs: number;
-  state: Grid;
+  state: string[]; // Raw string array from JSON
 }
 
 export interface LevelData {
@@ -20,23 +18,53 @@ export class Level {
     }
 
     static async fromFile(path: string): Promise<Level> {
-        const levelData = JSON.parse(await readFile(path, "utf8")) as LevelData;
+        const response = await fetch(path);
+        const levelData = await response.json() as LevelData;
         return new Level(levelData);
     }
 
-    private static score(expected: Grid, actual: Grid): number {
+    // Convert a keyframe's string array to a VimGrid
+    static keyframeToVimGrid(keyframe: Keyframe): VimGrid {
+        return VimGrid.createGridFromText(keyframe.state);
+    }
+
+    // Get all keyframes as VimGrid instances
+    getKeyframesAsVimGrids(): Array<{ tMs: number; grid: VimGrid }> {
+        return this.keyframes.map(kf => ({
+            tMs: kf.tMs,
+            grid: Level.keyframeToVimGrid(kf)
+        }));
+    }
+
+    // Get raw keyframes
+    getKeyframes(): Keyframe[] {
+        return this.keyframes;
+    }
+
+    static score(expected: VimGrid, actual: VimGrid): number {
         let matches = 0;
         let total = 0;
 
-        const rows = Math.max(expected.length, actual.length);
+        const rows = Math.max(expected.numRows, actual.numRows);
         for (let r = 0; r < rows; r++) {
-            const expectedRow = expected[r] ?? "";
-            const actualRow = actual[r] ?? "";
+            const cols = Math.max(
+                r < expected.numRows ? expected.numCols : 0,
+                r < actual.numRows ? actual.numCols : 0
+            );
 
-            const cols = Math.max(expectedRow.length, actualRow.length);
             for (let c = 0; c < cols; c++) {
                 total++;
-                if (expectedRow[c] === actualRow[c]) matches++;
+                let expectedCh = " ";
+                let actualCh = " ";
+
+                if (expected.inBounds(r, c)) {
+                    expectedCh = expected.get(r, c).ch;
+                }
+                if (actual.inBounds(r, c)) {
+                    actualCh = actual.get(r, c).ch;
+                }
+
+                if (expectedCh === actualCh) matches++;
             }
         }
         
