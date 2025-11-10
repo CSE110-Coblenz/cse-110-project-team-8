@@ -8,6 +8,8 @@ class VimController {
     if this.model.mode === "insert" {
       if(key === "Escape") {
         this.model.mode === "normal";
+      } else if (key === "Delete") {
+        this.model.deleteText();
       } else {
         this.model.insertChar(key);
       }
