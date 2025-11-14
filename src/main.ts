@@ -67,7 +67,7 @@ function startGame() {
 
     // Set up keyboard event listener
     window.addEventListener("keydown", handleKeyPress);
-
+    window.addEventListener("keydown", handleKeyPress);
     gameInitialized = true;
   }
 }

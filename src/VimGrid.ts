@@ -76,7 +76,8 @@ export default class VimGrid {
 
     setCursor(row: number, col: number): void {
         const r = Math.max(0, Math.min(this.numRows - 1, row));
-        const c = Math.max(0, Math.min(this.numCols - 1, col));
+        const maxCol = this.mode === Mode.Insert ? this.numCols : this.numCols - 1;
+        const c = Math.max(0, Math.min(maxCol, col));
         this.cursor = { row: r, col: c };
     }
 
@@ -143,6 +144,18 @@ export default class VimGrid {
             this.grid[r].push({ ch: '' });
         }
         this.numCols++;
+    }
+
+    // Remove a row at the specified index
+    removeRow(atIndex: number): void {
+        if (atIndex < 0 || atIndex >= this.numRows) return;
+        if (this.numRows <= 1) return;
+        
+        this.grid.splice(atIndex, 1);
+        this.numRows--;
+        if (this.cursor.row >= this.numRows) {
+            this.cursor.row = Math.max(0, this.numRows - 1);
+        }
     }
   }
 

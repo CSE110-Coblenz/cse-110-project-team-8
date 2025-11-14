@@ -1,5 +1,5 @@
 import Konva from "konva";
-import VimGrid from "./VimGrid.js";
+import VimGrid, { Mode } from "./VimGrid.js";
 
 export class GridView {
     private group: Konva.Group;
@@ -94,6 +94,18 @@ export class GridView {
         this.grid = grid;
         const rows = grid.getGrid();
 
+        // Remove excess rows if grid shrunk
+        while (this.cells.length > grid.numRows) {
+            const r = this.cells.length - 1;
+            // Remove cells from Konva group
+            for (let c = 0; c < this.cells[r].length; c++) {
+                this.highlights[r][c].destroy();
+                this.cells[r][c].destroy();
+            }
+            this.highlights.pop();
+            this.cells.pop();
+        }
+
         // Expand rows if needed
         while (this.cells.length < grid.numRows) {
             const r = this.cells.length;
@@ -126,8 +138,18 @@ export class GridView {
             this.cells.push(rowText);
         }
 
-        // Expand columns if needed (for all existing rows)
+        // Remove excess columns if grid shrunk, then expand if needed
         for (let r = 0; r < Math.min(this.cells.length, grid.numRows); r++) {
+            // Remove excess columns
+            while (this.cells[r].length > grid.numCols) {
+                const c = this.cells[r].length - 1;
+                this.highlights[r][c].destroy();
+                this.cells[r][c].destroy();
+                this.highlights[r].pop();
+                this.cells[r].pop();
+            }
+            
+            // Expand columns if needed
             while (this.cells[r].length < grid.numCols) {
                 const c = this.cells[r].length;
                 const rect = new Konva.Rect({
@@ -173,7 +195,11 @@ export class GridView {
 
     /** Move cursor to given row/col (purely visual) */
     setCursor(row: number, col: number) {
-        this.cursor.position({ x: col * this.cellW, y: row * this.cellH });
+        const validRow = Math.max(0, Math.min(this.grid.numRows - 1, row));
+        const maxCol = this.grid.getMode() === Mode.Insert ? this.grid.numCols : this.grid.numCols - 1;
+        const validCol = Math.max(0, Math.min(maxCol, col));
+        this.cursor.position({ x: validCol * this.cellW, y: validRow * this.cellH });
+        this.cursor.visible(true);
         this.group.getLayer()?.batchDraw();
     }
 

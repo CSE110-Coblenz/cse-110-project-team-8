@@ -35,25 +35,12 @@ export class VimController {
             } else if (event.key === "Enter") {
                 this.insertNewLine();
                 return;
-            } else if (event.key === "Backspace" || event.key === "Delete") {
+            } else if (event.key === "Backspace") {
                 this.deleteText();
-                return;
             }
             
             const key = event.key.toLowerCase();
-            if (key === "h") {
-                this.moveCursorLeft();
-                return;
-            } else if (key === "j") {
-                this.moveCursorDown();
-                return;
-            } else if (key === "k") {
-                this.moveCursorUp();
-                return;
-            } else if (key === "l") {
-                this.moveCursorRight();
-                return;
-            } else if (event.key.length === 1) {
+            if (event.key.length === 1) {
                 const char = event.key;
                 // Only insert if it's a printable ASCII character
                 if (char >= ' ' && char <= '~') {
@@ -83,6 +70,36 @@ export class VimController {
     // Delete text at the cursor position
     private deleteText(): void {
         const { row, col } = this.grid.getCursor();
+
+        if (col === 0 && row > 0) {
+            const prevRow = row - 1;
+            const prevRightmost = this.grid.findRightmostOccupied(prevRow);
+            const currentRightmost = this.grid.findRightmostOccupied(row);
+            
+            const appendStartCol = prevRightmost >= 0 ? prevRightmost + 1 : 0;
+            
+            if (currentRightmost >= 0) {
+                const neededCols = appendStartCol + (currentRightmost + 1);
+                while (this.grid.numCols <= neededCols) {
+                    this.grid.appendColumn();
+                }
+
+                for (let c = 0; c <= currentRightmost; c++) {
+                    const cell = this.grid.get(row, c);
+                    this.grid.set(prevRow, appendStartCol + c, cell);
+                }
+            }
+            
+            this.grid.removeRow(row);
+            
+            const targetCol = appendStartCol;
+            if (this.grid.getMode() === Mode.Insert && targetCol >= this.grid.numCols) {
+                this.grid.appendColumn();
+            }
+            this.grid.setCursor(prevRow, targetCol);
+            return;
+        }
+        
         if (col === 0) return;
         
         const rightmost = this.grid.findRightmostOccupied(row);
@@ -97,7 +114,6 @@ export class VimController {
             }
         }
         
-        // Move cursor left
         this.grid.moveCursorBy(0, -1);
     }
 
