@@ -94,6 +94,67 @@ export class GridView {
         this.grid = grid;
         const rows = grid.getGrid();
 
+        // Expand rows if needed
+        while (this.cells.length < grid.numRows) {
+            const r = this.cells.length;
+            const rowRects: Konva.Rect[] = [];
+            const rowText: Konva.Text[] = [];
+            for (let c = 0; c < grid.numCols; c++) {
+                const rect = new Konva.Rect({
+                    x: c * this.cellW,
+                    y: r * this.cellH,
+                    width: this.cellW,
+                    height: this.cellH,
+                    fill: "#000000ff",
+                });
+                const text = new Konva.Text({
+                    x: c * this.cellW,
+                    y: r * this.cellH + (this.cellH - this.fontSize) / 2,
+                    width: this.cellW,
+                    height: this.cellH,
+                    text: " ",
+                    fontSize: this.fontSize,
+                    fontFamily: this.fontFamily,
+                    fill: "#e5e5e5",
+                });
+                this.group.add(rect);
+                this.group.add(text);
+                rowRects.push(rect);
+                rowText.push(text);
+            }
+            this.highlights.push(rowRects);
+            this.cells.push(rowText);
+        }
+
+        // Expand columns if needed (for all existing rows)
+        for (let r = 0; r < Math.min(this.cells.length, grid.numRows); r++) {
+            while (this.cells[r].length < grid.numCols) {
+                const c = this.cells[r].length;
+                const rect = new Konva.Rect({
+                    x: c * this.cellW,
+                    y: r * this.cellH,
+                    width: this.cellW,
+                    height: this.cellH,
+                    fill: "#000000ff",
+                });
+                const text = new Konva.Text({
+                    x: c * this.cellW,
+                    y: r * this.cellH + (this.cellH - this.fontSize) / 2,
+                    width: this.cellW,
+                    height: this.cellH,
+                    text: " ",
+                    fontSize: this.fontSize,
+                    fontFamily: this.fontFamily,
+                    fill: "#e5e5e5",
+                });
+                this.group.add(rect);
+                this.group.add(text);
+                this.highlights[r].push(rect);
+                this.cells[r].push(text);
+            }
+        }
+
+        // Update all cells
         for (let r = 0; r < grid.numRows; r++) {
             for (let c = 0; c < grid.numCols; c++) {
                 const cell = rows[r][c];

@@ -1,4 +1,4 @@
-import { Player } from "./player.js";
+import { Player } from "./Player.js";
 
 const leaderboard: Player[] = [
   new Player({ rank: 1, name: "VimMaster99", score: 1234 }),
