@@ -84,7 +84,20 @@ export class VimController {
     private deleteText(): void {
         const { row, col } = this.grid.getCursor();
         if (col === 0) return;
-        this.grid.set(row, col - 1, { ch: ' ' });
+        
+        const rightmost = this.grid.findRightmostOccupied(row);
+        if (rightmost >= 0 && col - 1 <= rightmost) {
+            for (let c = col - 1; c <= rightmost; c++) {
+                if (c + 1 < this.grid.numCols) {
+                    const cell = this.grid.get(row, c + 1);
+                    this.grid.set(row, c, cell);
+                } else {
+                    this.grid.set(row, c, { ch: '' });
+                }
+            }
+        }
+        
+        // Move cursor left
         this.grid.moveCursorBy(0, -1);
     }
 
