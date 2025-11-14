@@ -3,12 +3,15 @@ import Konva from "konva";
 import VimGrid from "./VimGrid.js";
 import { GridView } from "./GridView.js";
 import { VimController } from "./VimController.js";
+import { loadProgress } from "./progress.js";
 
 let stage: Konva.Stage | null = null;
 let gameInitialized = false;
 let controller: VimController | null = null;
 let view: GridView | null = null;
 let grid: VimGrid | null = null;
+let progress = loadProgress();
+console.log("Loaded progress:", progress);
 
 function handleKeyPress(event: KeyboardEvent) {
   if (!controller || !view || !grid) return;
@@ -90,3 +93,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+import { updateProgress } from "./progress.js";
+// TODO: Call onLevelCompleted(levelId, levelScore)
+// when the player finishes a level and Level.score() is calculated.
+function onLevelCompleted(levelId: string, levelScore: number) {
+  updateProgress((current) => {
+    const completed = new Set(current.completedLevels);
+    completed.add(levelId);
+
+    return {
+      ...current,
+      completedLevels: Array.from(completed),
+      bestScore: Math.max(current.bestScore, levelScore),
+      lastOpenLevelId: levelId,
+    };
+  });
+
+  console.log("Progress saved for", levelId);
+}
