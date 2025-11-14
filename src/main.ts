@@ -1,10 +1,28 @@
-import { initHomepage } from "./homepage.js";
+import { initHomepage } from "./Homepage.js";
 import Konva from "konva";
 import VimGrid from "./VimGrid.js";
 import { GridView } from "./GridView.js";
+import { VimController } from "./VimController.js";
 
 let stage: Konva.Stage | null = null;
 let gameInitialized = false;
+let controller: VimController | null = null;
+let view: GridView | null = null;
+let grid: VimGrid | null = null;
+
+function handleKeyPress(event: KeyboardEvent) {
+  if (!controller || !view || !grid) return;
+  
+  // Prevent default browser behavior for vim keys
+  event.preventDefault();
+  
+  controller.handleInput(event);
+  
+  // Update the view after handling input
+  view.update(grid);
+  const cursor = grid.getCursor();
+  view.setCursor(cursor.row, cursor.col);
+}
 
 function startGame() {
   // Hide homepage UI
@@ -27,7 +45,7 @@ function startGame() {
     stage.add(layer);
 
     // Create your VimGrid (model)
-    const grid = VimGrid.createGridFromText([
+    grid = VimGrid.createGridFromText([
       "function hello() {",
       "  console.log('vim rhythm!')",
       "}",
@@ -35,18 +53,20 @@ function startGame() {
       ":wq",
     ]);
 
+    // Create the controller
+    controller = new VimController(grid);
+
     // Create the view (VimGridView)
-    const view = new GridView(grid);
+    view = new GridView(grid);
     layer.add(view.getGroup());
+    
+    // Set initial cursor position
+    const cursor = grid.getCursor();
+    view.setCursor(cursor.row, cursor.col);
     layer.draw();
 
-    // Animate cursor movement for demo
-    let row = 0, col = 0;
-    setInterval(() => {
-      view.setCursor(row, col);
-      col = (col + 1) % grid.numCols;
-      if (col === 0) row = (row + 1) % grid.numRows;
-    }, 250);
+    // Set up keyboard event listener
+    window.addEventListener("keydown", handleKeyPress);
 
     gameInitialized = true;
   }
