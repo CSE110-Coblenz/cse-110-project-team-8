@@ -5,6 +5,7 @@ export class DualGridView {
   private group: Konva.Group;
   private leftGridView: GridView;
   private rightGridView: GridView;
+  private modeLabel: Konva.Text;
 
   constructor(leftGrid: GridView, rightGrid: GridView) {
     this.leftGridView = leftGrid;
@@ -26,12 +27,21 @@ export class DualGridView {
         height: window.innerHeight
     });
 
+    this.modeLabel = new Konva.Text({
+        text: 'Current Mode: ' + this.leftGridView.getVimGrid().getMode(),
+        fontSize: 20,
+        fill: 'blue',
+        x: window.innerWidth / 200, // Position relative to the group's origin
+        y: window.innerHeight * 97/100
+    });
+
     // Add the inner grid groups directly to this group
     leftGroup.add(this.leftGridView.getGroup());
     rightGroup.add(this.rightGridView.getGroup());
 
     this.group.add(leftGroup);
     this.group.add(rightGroup);
+    this.group.add(this.modeLabel);
     
   }
 
@@ -45,5 +55,14 @@ export class DualGridView {
 
   getRightGridView(): GridView {
     return this.rightGridView;
+  }
+
+  private buildModeLabel() {
+    return 'Current Mode: ' + this.leftGridView.getVimGrid().getMode();
+  }
+
+  updateModeLabel() {
+    this.modeLabel.text(this.buildModeLabel());
+    this.modeLabel.getLayer()?.draw();
   }
 }

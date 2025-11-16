@@ -26,6 +26,7 @@ function handleKeyPress(event: KeyboardEvent) {
   
   // Update the view after handling input
   leftView.update(leftGrid);
+  dualView?.updateModeLabel();
   const cursor = leftGrid.getCursor();
   leftView.setCursor(cursor.row, cursor.col);
 }

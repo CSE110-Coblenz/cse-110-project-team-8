@@ -213,5 +213,9 @@ export class GridView {
     getGroup(): Konva.Group {
         return this.group;
     }
+
+    getVimGrid(): VimGrid {
+        return this.grid;
+    }
 }
 
