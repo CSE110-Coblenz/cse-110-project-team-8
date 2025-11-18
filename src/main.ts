@@ -1,4 +1,4 @@
-import { initHomepage } from "./Homepage.js";
+import { initHomepage } from "./homepage.js";
 import Konva from "konva";
 import VimGrid from "./VimGrid.js";
 import { GridView } from "./GridView.js";
