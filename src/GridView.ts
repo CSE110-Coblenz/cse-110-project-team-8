@@ -19,7 +19,7 @@ export class GridView {
     Visual: { fill: "#1d4ed8", text: "#ffffff" },
     };
 
-    constructor(grid: VimGrid, cellW = 12, cellH = 20, fontSize = 16) {
+    constructor(grid: VimGrid, positionX: number, cellW = 12, cellH = 20, fontSize = 16) {
         this.group = new Konva.Group();
         this.grid = grid;
         this.cellW = cellW;
@@ -31,7 +31,7 @@ export class GridView {
         const background = new Konva.Rect({
             x: 0,
             y: 0,
-            width: window.innerWidth,
+            width: window.innerWidth/2,
             height: window.innerHeight,
             fill: "black", 
         });
@@ -201,6 +201,7 @@ export class GridView {
         this.cursor.position({ x: validCol * this.cellW, y: validRow * this.cellH });
         this.cursor.visible(true);
         this.group.getLayer()?.batchDraw();
+        this.cursor.moveToTop();
     }
 
     /** Show/hide cursor (controller uses this for blinking) */
@@ -211,6 +212,10 @@ export class GridView {
 
     getGroup(): Konva.Group {
         return this.group;
+    }
+
+    getVimGrid(): VimGrid {
+        return this.grid;
     }
 }
 

@@ -1,17 +1,23 @@
-import { initHomepage } from "./Homepage.js";
+import { initHomepage } from "./homepage.js";
 import Konva from "konva";
 import VimGrid from "./VimGrid.js";
 import { GridView } from "./GridView.js";
+import { DualGridView } from "./DualGridView.js";
 import { VimController } from "./VimController.js";
 
 let stage: Konva.Stage | null = null;
 let gameInitialized = false;
 let controller: VimController | null = null;
-let view: GridView | null = null;
-let grid: VimGrid | null = null;
+let dualView: DualGridView | null = null;
+let leftView : GridView | null = null;
+let rightView : GridView | null = null;
+let leftGrid: VimGrid | null = null;
+let rightGrid: VimGrid | null = null;
+
+const HALF_VIEW_WIDTH = window.innerWidth / 2;
 
 function handleKeyPress(event: KeyboardEvent) {
-  if (!controller || !view || !grid) return;
+  if (!controller || !leftView || !leftGrid) return;
   
   // Prevent default browser behavior for vim keys
   event.preventDefault();
@@ -19,9 +25,10 @@ function handleKeyPress(event: KeyboardEvent) {
   controller.handleInput(event);
   
   // Update the view after handling input
-  view.update(grid);
-  const cursor = grid.getCursor();
-  view.setCursor(cursor.row, cursor.col);
+  leftView.update(leftGrid);
+  dualView?.updateModeLabel();
+  const cursor = leftGrid.getCursor();
+  leftView.setCursor(cursor.row, cursor.col);
 }
 
 function startGame() {
@@ -45,24 +52,31 @@ function startGame() {
     stage.add(layer);
 
     // Create your VimGrid (model)
-    grid = VimGrid.createGridFromText([
+    leftGrid = VimGrid.createGridFromText([
       "function hello() {",
       "  console.log('vim rhythm!')",
       "}",
       "",
       ":wq",
     ]);
+    
+    rightGrid = VimGrid.createGridFromText([
+      "test",
+    ]);
 
     // Create the controller
-    controller = new VimController(grid);
+    controller = new VimController(leftGrid);
 
     // Create the view (VimGridView)
-    view = new GridView(grid);
-    layer.add(view.getGroup());
+    leftView = new GridView(leftGrid, 0);
+    rightView = new GridView(rightGrid, HALF_VIEW_WIDTH);
+    dualView = new DualGridView(leftView, rightView);
+
+    layer.add(dualView.getGroup());
     
     // Set initial cursor position
-    const cursor = grid.getCursor();
-    view.setCursor(cursor.row, cursor.col);
+    const cursor = leftGrid.getCursor();
+    leftView.setCursor(cursor.row, cursor.col);
     layer.draw();
 
     // Set up keyboard event listener

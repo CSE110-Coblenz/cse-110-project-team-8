@@ -1,32 +1,36 @@
 {
     "dependencies": {
-      "konva": "^10.0.8"
+        "konva": "^10.0.8"
     },
     "name": "cse-110-project-team-8",
     "version": "1.0.0",
     "description": "Fresh repository with main branch.",
     "main": "index.js",
     "scripts": {
-      "test": "echo \"Error: no test specified\" && exit 1",
-      "dev": "vite",
-      "build": "vite build",
-      "preview": "vite preview",
-      "start": "vite"
+        "test": "jest",
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "start": "vite"
     },
     "repository": {
-      "type": "git",
-      "url": "git+https://github.com/CSE110-Coblenz/cse-110-project-team-8.git"
+        "type": "git",
+        "url": "git+https://github.com/CSE110-Coblenz/cse-110-project-team-8.git"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "bugs": {
-      "url": "https://github.com/CSE110-Coblenz/cse-110-project-team-8/issues"
+        "url": "https://github.com/CSE110-Coblenz/cse-110-project-team-8/issues"
     },
     "homepage": "https://github.com/CSE110-Coblenz/cse-110-project-team-8#readme",
     "devDependencies": {
-      "@types/node": "^24.9.2",
-      "typescript": "^5.9.3",
-      "vite": "^7.1.12"
+        "@types/jest": "^30.0.0",
+        "@types/node": "^24.9.2",
+        "jest": "^29.7.0",
+        "jest-environment-jsdom": "^29.7.0",
+        "ts-jest": "^29.4.5",
+        "typescript": "^5.9.3",
+        "vite": "^7.1.12"
     }
-  }
+}
