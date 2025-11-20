@@ -17,6 +17,7 @@ export class GridView {
     private readonly HL_COLORS: Record<string, { fill?: string; text?: string }> = {
     StatusLine: { fill: "#1f2937", text: "#e5e7eb" },
     Visual: { fill: "#1d4ed8", text: "#ffffff" },
+    Mismatch: { fill: "#000000ff", text: "#ff0000" }, // Red text for mismatched cells
     };
 
     constructor(grid: VimGrid, positionX: number, cellW = 12, cellH = 20, fontSize = 16) {

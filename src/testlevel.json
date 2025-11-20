@@ -1,16 +1,112 @@
 {
-    "keyframes": [
-      {
-        "tMs": 0,
-        "state": ["abc", "def", "ghi"]
-      },
-      {
-        "tMs": 500,
-        "state": ["Abc", "Def", "Ghi"]
-      },
-      {
-        "tMs": 1000,
-        "state": ["aBc", "deF", "ghi"]
-      }
-    ]
-  }
+  "keyframes": [
+    {
+      "tMs": 0,
+      "state": [
+        "function hello() {",
+        "  console.log('Hello, world!')",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello() {",
+        "  console.log('Hello, world!')",
+        "  return true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 20000,
+      "state": [
+        "function hello(name) {",
+        "  console.log('Hello, world!')",
+        "  return true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "function hello(name) {",
+        "  console.log('Hello, ' + name + '!')",
+        "  return true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 40000,
+      "state": [
+        "function hello(name) {",
+        "  if (!name) {",
+        "    name = 'world';",
+        "  }",
+        "  console.log('Hello, ' + name + '!')",
+        "  return true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 50000,
+      "state": [
+        "function hello(name) {",
+        "  if (!name) {",
+        "    name = 'world';",
+        "  }",
+        "  const message = 'Hello, ' + name + '!';",
+        "  console.log(message);",
+        "  return true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 60000,
+      "state": [
+        "function hello(name) {",
+        "  if (!name) {",
+        "    name = 'world';",
+        "  }",
+        "  const message = `Hello, ${name}!`;",
+        "  console.log(message);",
+        "  return true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 70000,
+      "state": [
+        "function hello(name) {",
+        "  if (!name) {",
+        "    name = 'world';",
+        "  }",
+        "  const message = `Hello, ${name}!`;",
+        "  console.log(message);",
+        "  return message;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 80000,
+      "state": [
+        "function hello(name = 'world') {",
+        "  const message = `Hello, ${name}!`;",
+        "  console.log(message);",
+        "  return message;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 90000,
+      "state": [
+        "function hello(name = 'world') {",
+        "  const message = `Hello, ${name}!`;",
+        "  console.log(message);",
+        "  return message;",
+        "}",
+        "",
+        "hello('Vim');"
+      ]
+    }
+  ]
+}
