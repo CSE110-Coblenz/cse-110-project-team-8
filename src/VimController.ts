@@ -98,6 +98,7 @@ export class VimController {
         return ch === TAB_LEFT || ch === TAB_MIDDLE || ch === TAB_RIGHT;
     }
 
+
     // Find the start column of a tab (where TAB_LEFT is)
     private findTabStart(row: number, col: number): number | null {
         if (!this.grid.inBounds(row, col)) return null;
@@ -105,13 +106,19 @@ export class VimController {
         const cell = this.grid.get(row, col);
         if (!this.isTabChar(cell.ch)) return null;
         
+        // If we're already on TAB_LEFT, return it
+        if (this.isTabLeft(cell.ch)) {
+            return col;
+        }
+        
         // Search backwards to find TAB_LEFT
-        for (let c = col; c >= 0; c--) {
+        for (let c = col - 1; c >= 0; c--) {
             if (!this.grid.inBounds(row, c)) break;
             const cell = this.grid.get(row, c);
             if (this.isTabLeft(cell.ch)) {
                 return c;
             }
+            // If we hit a non-tab character, we've gone too far
             if (!this.isTabChar(cell.ch)) break;
         }
         return null;
@@ -124,15 +131,78 @@ export class VimController {
         const cell = this.grid.get(row, col);
         if (!this.isTabChar(cell.ch)) return null;
         
+        // If we're already on TAB_RIGHT, return it
+        if (this.isTabRight(cell.ch)) {
+            return col;
+        }
+        
         // Search forwards to find TAB_RIGHT
-        for (let c = col; c < this.grid.numCols; c++) {
+        for (let c = col + 1; c < this.grid.numCols; c++) {
             if (!this.grid.inBounds(row, c)) break;
             const cell = this.grid.get(row, c);
             if (this.isTabRight(cell.ch)) {
                 return c;
             }
+            // If we hit a non-tab character, we've gone too far
             if (!this.isTabChar(cell.ch)) break;
         }
+        return null;
+    }
+
+    // Check if a column is within a tab and return the appropriate tab cell position
+    private getValidTabPosition(row: number, col: number): number | null {
+        if (!this.grid.inBounds(row, col)) return null;
+        
+        const cell = this.grid.get(row, col);
+        if (!this.isTabChar(cell.ch)) return null;
+        
+        // We're on a tab character - find the appropriate position based on mode
+        const mode = this.grid.getMode();
+        
+        if (mode === Mode.Insert) {
+            // Insert mode: jump to TAB_LEFT
+            // First check if we're already on TAB_LEFT
+            if (this.isTabLeft(cell.ch)) {
+                return col; // Already at the correct position
+            }
+            // Search backwards to find TAB_LEFT (search up to TAB_SIZE * 2 to handle edge cases)
+            for (let c = col - 1; c >= Math.max(0, col - TAB_SIZE * 2); c--) {
+                if (!this.grid.inBounds(row, c)) break;
+                const checkCell = this.grid.get(row, c);
+                if (this.isTabLeft(checkCell.ch)) {
+                    return c;
+                }
+                // If we hit a non-tab character, we've gone too far
+                if (!this.isTabChar(checkCell.ch)) break;
+            }
+            // If we still haven't found it, try using findTabStart as a fallback
+            const tabStart = this.findTabStart(row, col);
+            if (tabStart !== null) {
+                return tabStart;
+            }
+        } else {
+            // Normal mode: jump to TAB_RIGHT
+            // First check if we're already on TAB_RIGHT
+            if (this.isTabRight(cell.ch)) {
+                return col; // Already at the correct position
+            }
+            // Search forwards to find TAB_RIGHT (search up to TAB_SIZE * 2 to handle edge cases)
+            for (let c = col + 1; c < Math.min(this.grid.numCols, col + TAB_SIZE * 2); c++) {
+                if (!this.grid.inBounds(row, c)) break;
+                const checkCell = this.grid.get(row, c);
+                if (this.isTabRight(checkCell.ch)) {
+                    return c;
+                }
+                // If we hit a non-tab character, we've gone too far
+                if (!this.isTabChar(checkCell.ch)) break;
+            }
+            // If we still haven't found it, try using findTabEnd as a fallback
+            const tabEnd = this.findTabEnd(row, col);
+            if (tabEnd !== null) {
+                return tabEnd;
+            }
+        }
+        
         return null;
     }
 
@@ -369,106 +439,72 @@ export class VimController {
         const { row, col } = this.grid.getCursor();
         const newRow = Math.min(this.grid.numRows - 1, row + 1);
         const rightmost = this.grid.findRightmostOccupied(newRow);
-        const currentRightmost = this.grid.findRightmostOccupied(row);
+        
+        // Preserve virtual column, but display at rightmost valid if virtual column is beyond line
+        // Don't update virtual column when moving up/down
+        const virtualCol = this.grid.getVirtualColumn();
         
         if (rightmost < 0) {
-            this.grid.setCursor(newRow, 0);
-        } else if (col <= rightmost) {
-            // Check if we're landing on a tab character
-            if (col < this.grid.numCols) {
-                const cell = this.grid.get(newRow, col);
-                if (this.isTabMiddle(cell.ch)) {
-                    // Never land on middle - move to appropriate end based on mode
-                    if (this.grid.getMode() === Mode.Insert) {
-                        const tabStart = this.findTabStart(newRow, col);
-                        if (tabStart !== null) this.grid.setCursor(newRow, tabStart);
-                    } else {
-                        const tabEnd = this.findTabEnd(newRow, col);
-                        if (tabEnd !== null) this.grid.setCursor(newRow, tabEnd);
-                    }
-                } else if (this.isTabLeft(cell.ch) && this.grid.getMode() === Mode.Normal) {
-                    // In Normal mode, move to TAB_RIGHT
-                    const tabEnd = this.findTabEnd(newRow, col);
-                    if (tabEnd !== null) this.grid.setCursor(newRow, tabEnd);
-                } else if (this.isTabRight(cell.ch) && this.grid.getMode() === Mode.Insert) {
-                    // In Insert mode, move to TAB_LEFT
-                    const tabStart = this.findTabStart(newRow, col);
-                    if (tabStart !== null) this.grid.setCursor(newRow, tabStart);
-                } else {
-                    this.grid.setCursor(newRow, col);
-                }
-            } else {
-                this.grid.setCursor(newRow, col);
-            }
+            // Empty line - display at column 0, but preserve virtual column
+            this.grid.setCursor(newRow, 0, false);
         } else {
-            // Cursor is beyond the rightmost filled cell in the new line
-            if (this.grid.getMode() === Mode.Insert) {
-                // In Insert mode, if moving from a longer/equal line to a shorter/equal line,
-                // allow cursor to be one cell to the right of rightmost
-                if (currentRightmost >= 0 && rightmost <= currentRightmost) {
-                    const targetCol = Math.min(rightmost + 1, this.grid.numCols - 1);
-                    this.grid.setCursor(newRow, targetCol);
-                } else {
-                    this.grid.setCursor(newRow, rightmost);
+            // Use virtual column if valid, otherwise use rightmost valid
+            const maxCol = this.grid.getMode() === Mode.Insert ? Math.min(rightmost + 1, this.grid.numCols - 1) : rightmost;
+            const displayCol = virtualCol <= maxCol ? virtualCol : maxCol;
+            
+            // Check if display column is within a tab, and jump to appropriate tab cell based on mode
+            let finalCol = displayCol;
+            if (displayCol < this.grid.numCols && displayCol >= 0 && this.grid.inBounds(newRow, displayCol)) {
+                const cell = this.grid.get(newRow, displayCol);
+                if (this.isTabChar(cell.ch)) {
+                    const validTabPos = this.getValidTabPosition(newRow, displayCol);
+                    if (validTabPos !== null) {
+                        // We're landing on a tab - jump to the appropriate tab cell based on mode
+                        // Always jump, even if it's the same position (handles TAB_MIDDLE case)
+                        finalCol = validTabPos;
+                    }
                 }
-            } else {
-                // Normal mode: go to rightmost filled cell
-                this.grid.setCursor(newRow, rightmost);
             }
+            
+            // Set cursor without updating virtual column
+            this.grid.setCursor(newRow, finalCol, false);
         }
     }
 
     // Move cursor up following vim rules
     private moveCursorUp(): void {
-        const { row, col } = this.grid.getCursor();
+        const { row } = this.grid.getCursor();
         const newRow = Math.max(0, row - 1);
         const rightmost = this.grid.findRightmostOccupied(newRow);
-        const currentRightmost = this.grid.findRightmostOccupied(row);
+        
+        // Preserve virtual column, but display at rightmost valid if virtual column is beyond line
+        // Don't update virtual column when moving up/down
+        const virtualCol = this.grid.getVirtualColumn();
         
         if (rightmost < 0) {
-            this.grid.setCursor(newRow, 0);
-        } else if (col <= rightmost) {
-            // Check if we're landing on a tab character
-            if (col < this.grid.numCols) {
-                const cell = this.grid.get(newRow, col);
-                if (this.isTabMiddle(cell.ch)) {
-                    // Never land on middle - move to appropriate end based on mode
-                    if (this.grid.getMode() === Mode.Insert) {
-                        const tabStart = this.findTabStart(newRow, col);
-                        if (tabStart !== null) this.grid.setCursor(newRow, tabStart);
-                    } else {
-                        const tabEnd = this.findTabEnd(newRow, col);
-                        if (tabEnd !== null) this.grid.setCursor(newRow, tabEnd);
-                    }
-                } else if (this.isTabLeft(cell.ch) && this.grid.getMode() === Mode.Normal) {
-                    // In Normal mode, move to TAB_RIGHT
-                    const tabEnd = this.findTabEnd(newRow, col);
-                    if (tabEnd !== null) this.grid.setCursor(newRow, tabEnd);
-                } else if (this.isTabRight(cell.ch) && this.grid.getMode() === Mode.Insert) {
-                    // In Insert mode, move to TAB_LEFT
-                    const tabStart = this.findTabStart(newRow, col);
-                    if (tabStart !== null) this.grid.setCursor(newRow, tabStart);
-                } else {
-                    this.grid.setCursor(newRow, col);
-                }
-            } else {
-                this.grid.setCursor(newRow, col);
-            }
+            // Empty line - display at column 0, but preserve virtual column
+            this.grid.setCursor(newRow, 0, false);
         } else {
-            // Cursor is beyond the rightmost filled cell in the new line
-            if (this.grid.getMode() === Mode.Insert) {
-                // In Insert mode, if moving from a longer/equal line to a shorter/equal line,
-                // allow cursor to be one cell to the right of rightmost
-                if (currentRightmost >= 0 && rightmost <= currentRightmost) {
-                    const targetCol = Math.min(rightmost + 1, this.grid.numCols - 1);
-                    this.grid.setCursor(newRow, targetCol);
-                } else {
-                    this.grid.setCursor(newRow, rightmost);
+            // Use virtual column if valid, otherwise use rightmost valid
+            const maxCol = this.grid.getMode() === Mode.Insert ? Math.min(rightmost + 1, this.grid.numCols - 1) : rightmost;
+            const displayCol = virtualCol <= maxCol ? virtualCol : maxCol;
+            
+            // Check if display column is within a tab, and jump to appropriate tab cell based on mode
+            let finalCol = displayCol;
+            if (displayCol < this.grid.numCols && displayCol >= 0 && this.grid.inBounds(newRow, displayCol)) {
+                const cell = this.grid.get(newRow, displayCol);
+                if (this.isTabChar(cell.ch)) {
+                    const validTabPos = this.getValidTabPosition(newRow, displayCol);
+                    if (validTabPos !== null) {
+                        // We're landing on a tab - jump to the appropriate tab cell based on mode
+                        // Always jump, even if it's the same position (handles TAB_MIDDLE case)
+                        finalCol = validTabPos;
+                    }
                 }
-            } else {
-                // Normal mode: go to rightmost filled cell
-                this.grid.setCursor(newRow, rightmost);
             }
+            
+            // Set cursor without updating virtual column
+            this.grid.setCursor(newRow, finalCol, false);
         }
     }
 
