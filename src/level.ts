@@ -2,7 +2,7 @@ import VimGrid from "./VimGrid.js";
 import Konva from "konva";
 import { GridView } from "./GridView.js";
 import { DualGridView } from "./DualGridView.js";
-import { VimController } from "./VimController.js";
+import { VimController, TAB_LEFT, TAB_MIDDLE, TAB_RIGHT } from "./VimController.js";
 
 export interface Keyframe {
   tMs: number;
@@ -78,6 +78,20 @@ export class Level {
     }
 
     /**
+     * Normalizes whitespace characters to be equivalent for comparison.
+     * Spaces, tab characters, and empty strings are all treated as whitespace.
+     * @param ch - The character to normalize
+     * @returns Normalized character (whitespace characters become empty string)
+     */
+    private static normalizeWhitespace(ch: string): string {
+        // Treat spaces, tab characters, and empty strings as equivalent
+        if (ch === " " || ch === "" || ch === TAB_LEFT || ch === TAB_MIDDLE || ch === TAB_RIGHT) {
+            return "";
+        }
+        return ch;
+    }
+
+    /**
      * Compares an expected grid with an actual grid and returns a score based on character matches.
      * @param expected - The expected VimGrid to compare against
      * @param actual - The actual VimGrid to score
@@ -106,7 +120,11 @@ export class Level {
                     actualCh = actual.get(r, c).ch;
                 }
 
-                if (expectedCh === actualCh) matches++;
+                // Normalize whitespace for comparison
+                const normalizedExpected = Level.normalizeWhitespace(expectedCh);
+                const normalizedActual = Level.normalizeWhitespace(actualCh);
+
+                if (normalizedExpected === normalizedActual) matches++;
             }
         }
         
@@ -182,9 +200,13 @@ export class Level {
                 }
                 
                 // Mark mismatch in right grid if characters don't match
+                // Normalize whitespace for comparison (spaces, tabs, empty all treated as equivalent)
+                const normalizedExpected = Level.normalizeWhitespace(expectedCh);
+                const normalizedActual = Level.normalizeWhitespace(actualCh);
+                
                 if (this.rightGrid.inBounds(r, c)) {
                     const cell = this.rightGrid.get(r, c);
-                    if (expectedCh !== actualCh) {
+                    if (normalizedExpected !== normalizedActual) {
                         // Set mismatch highlight (red text) in right grid
                         this.rightGrid.set(r, c, { ch: cell.ch, hl: "Mismatch" });
                     } else {

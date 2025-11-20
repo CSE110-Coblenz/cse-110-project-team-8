@@ -4,7 +4,7 @@
       "tMs": 0,
       "state": [
         "function hello() {",
-        "  console.log('Hello, world!')",
+        "\tconsole.log('Hello, world!')",
         "}"
       ]
     },
@@ -12,8 +12,8 @@
       "tMs": 10000,
       "state": [
         "function hello() {",
-        "  console.log('Hello, world!')",
-        "  return true;",
+        "\tconsole.log('Hello, world!')",
+        "\treturn true;",
         "}"
       ]
     },
@@ -21,8 +21,8 @@
       "tMs": 20000,
       "state": [
         "function hello(name) {",
-        "  console.log('Hello, world!')",
-        "  return true;",
+        "\tconsole.log('Hello, world!')",
+        "\treturn true;",
         "}"
       ]
     },
@@ -30,8 +30,8 @@
       "tMs": 30000,
       "state": [
         "function hello(name) {",
-        "  console.log('Hello, ' + name + '!')",
-        "  return true;",
+        "\tconsole.log('Hello, ' + name + '!')",
+        "\treturn true;",
         "}"
       ]
     },
@@ -39,11 +39,11 @@
       "tMs": 40000,
       "state": [
         "function hello(name) {",
-        "  if (!name) {",
-        "    name = 'world';",
-        "  }",
-        "  console.log('Hello, ' + name + '!')",
-        "  return true;",
+        "\tif (!name) {",
+        "\t\tname = 'world';",
+        "\t}",
+        "\tconsole.log('Hello, ' + name + '!')",
+        "\treturn true;",
         "}"
       ]
     },
@@ -51,12 +51,12 @@
       "tMs": 50000,
       "state": [
         "function hello(name) {",
-        "  if (!name) {",
-        "    name = 'world';",
-        "  }",
-        "  const message = 'Hello, ' + name + '!';",
-        "  console.log(message);",
-        "  return true;",
+        "\tif (!name) {",
+        "\t\tname = 'world';",
+        "\t}",
+        "\tconst message = 'Hello, ' + name + '!';",
+        "\tconsole.log(message);",
+        "\treturn true;",
         "}"
       ]
     },
@@ -64,12 +64,12 @@
       "tMs": 60000,
       "state": [
         "function hello(name) {",
-        "  if (!name) {",
-        "    name = 'world';",
-        "  }",
-        "  const message = `Hello, ${name}!`;",
-        "  console.log(message);",
-        "  return true;",
+        "\tif (!name) {",
+        "\t\tname = 'world';",
+        "\t}",
+        "\tconst message = `Hello, ${name}!`;",
+        "\tconsole.log(message);",
+        "\treturn true;",
         "}"
       ]
     },
@@ -77,12 +77,12 @@
       "tMs": 70000,
       "state": [
         "function hello(name) {",
-        "  if (!name) {",
-        "    name = 'world';",
-        "  }",
-        "  const message = `Hello, ${name}!`;",
-        "  console.log(message);",
-        "  return message;",
+        "\tif (!name) {",
+        "\t\tname = 'world';",
+        "\t}",
+        "\tconst message = `Hello, ${name}!`;",
+        "\tconsole.log(message);",
+        "\treturn message;",
         "}"
       ]
     },
@@ -90,9 +90,9 @@
       "tMs": 80000,
       "state": [
         "function hello(name = 'world') {",
-        "  const message = `Hello, ${name}!`;",
-        "  console.log(message);",
-        "  return message;",
+        "\tconst message = `Hello, ${name}!`;",
+        "\tconsole.log(message);",
+        "\treturn message;",
         "}"
       ]
     },
@@ -100,9 +100,9 @@
       "tMs": 90000,
       "state": [
         "function hello(name = 'world') {",
-        "  const message = `Hello, ${name}!`;",
-        "  console.log(message);",
-        "  return message;",
+        "\tconst message = `Hello, ${name}!`;",
+        "\tconsole.log(message);",
+        "\treturn message;",
         "}",
         "",
         "hello('Vim');"

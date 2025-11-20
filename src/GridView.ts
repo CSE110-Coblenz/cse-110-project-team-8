@@ -1,5 +1,6 @@
 import Konva from "konva";
 import VimGrid, { Mode } from "./VimGrid.js";
+import { TAB_LEFT, TAB_MIDDLE, TAB_RIGHT } from "./VimController.js";
 
 export class GridView {
     private group: Konva.Group;
@@ -185,8 +186,10 @@ export class GridView {
                 const text = this.cells[r][c];
                 const hl = cell.hl ? this.HL_COLORS[cell.hl] : undefined; // type: {fill?:string; text?:string} | undefined
                 rect.setAttrs({ fill: hl?.fill || "#000000ff" });
+                // Display tab characters as spaces
+                const displayChar = (cell.ch === TAB_LEFT || cell.ch === TAB_MIDDLE || cell.ch === TAB_RIGHT) ? " " : (cell.ch || " ");
                 text.setAttrs({
-                    text: cell.ch || " ",
+                    text: displayChar,
                     fill: hl?.text || "#e5e5e5",
                 });
             }
