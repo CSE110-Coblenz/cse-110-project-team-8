@@ -26,4 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (mainPlayBtn) {
     mainPlayBtn.addEventListener("click", startGame);
   }
+  
+  // Also handle window resize
+  window.addEventListener("resize", () => {
+    console.log("Resize event triggered!");
+    if (stage && dualView) {
+      stage.width(window.innerWidth);
+      stage.height(window.innerHeight);
+
+      // Update dual view to resize both grids
+      dualView.resize(window.innerWidth, window.innerHeight);
+    }
+  });
 });

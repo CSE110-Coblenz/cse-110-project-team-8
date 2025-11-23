@@ -6,6 +6,8 @@ export class DualGridView {
   private leftGridView: GridView;
   private rightGridView: GridView;
   private modeLabel: Konva.Text;
+  private leftGroup: Konva.Group;
+  private rightGroup: Konva.Group;
 
   constructor(leftGrid: GridView, rightGrid: GridView) {
     this.leftGridView = leftGrid;
@@ -13,14 +15,14 @@ export class DualGridView {
 
     this.group = new Konva.Group();
 
-    const leftGroup = new Konva.Group({
+    this.leftGroup = new Konva.Group({
         x: 0,
         y: 0,
         width: window.innerWidth /2 ,
         height: window.innerHeight
     });
-    
-    const rightGroup = new Konva.Group({
+
+    this.rightGroup = new Konva.Group({
         x: window.innerWidth /2,
         y: 0,
         width: window.innerWidth /2 ,
@@ -36,11 +38,11 @@ export class DualGridView {
     });
 
     // Add the inner grid groups directly to this group
-    leftGroup.add(this.leftGridView.getGroup());
-    rightGroup.add(this.rightGridView.getGroup());
+    this.leftGroup.add(this.leftGridView.getGroup());
+    this.rightGroup.add(this.rightGridView.getGroup());
 
-    this.group.add(leftGroup);
-    this.group.add(rightGroup);
+    this.group.add(this.leftGroup);
+    this.group.add(this.rightGroup);
     this.group.add(this.modeLabel);
     
   }
@@ -64,5 +66,28 @@ export class DualGridView {
   updateModeLabel() {
     this.modeLabel.text(this.buildModeLabel());
     this.modeLabel.getLayer()?.draw();
+  }
+
+  resize(width: number, height: number): void {
+    const halfWidth = width / 2;
+
+    // Update left group
+    this.leftGroup.width(halfWidth);
+    this.leftGroup.height(height);
+
+    // Update right group position and size
+    this.rightGroup.x(halfWidth);
+    this.rightGroup.width(halfWidth);
+    this.rightGroup.height(height);
+
+    // Update mode label position
+    this.modeLabel.x(width / 200);
+    this.modeLabel.y(height * 97/100);
+
+    // Update the individual grid views
+    this.leftGridView.resize(halfWidth, height);
+    this.rightGridView.resize(halfWidth, height);
+
+    this.group.getLayer()?.draw();
   }
 }

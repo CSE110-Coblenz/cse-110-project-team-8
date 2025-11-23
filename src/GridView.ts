@@ -14,6 +14,7 @@ export class GridView {
     private readonly fontFamily: string;
     private cursor: Konva.Rect;
     private blinkInterval?: number;
+    private background: Konva.Rect;
 
     private readonly HL_COLORS: Record<string, { fill?: string; text?: string }> = {
     StatusLine: { fill: "#1f2937", text: "#e5e7eb" },
@@ -30,14 +31,14 @@ export class GridView {
         this.fontFamily =
             'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace';
 
-        const background = new Konva.Rect({
+        this.background = new Konva.Rect({
             x: 0,
             y: 0,
             width: window.innerWidth/2,
             height: window.innerHeight,
-            fill: "black", 
+            fill: "black",
         });
-        this.group.add(background);
+        this.group.add(this.background);
 
         // build static grid of rects + text
         const rows = grid.getGrid();
@@ -218,6 +219,13 @@ export class GridView {
 
     getVimGrid(): VimGrid {
         return this.grid;
+    }
+
+    /** Resize the background to fit new dimensions */
+    resize(width: number, height: number): void {
+        this.background.width(width);
+        this.background.height(height);
+        this.group.getLayer()?.draw();
     }
 }
 
