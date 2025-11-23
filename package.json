@@ -7,17 +7,6 @@
     "description": "Fresh repository with main branch.",
     "main": "index.js",
     "scripts": {
-<<<<<<< HEAD
-      "test": "echo \"Error: no test specified\" && exit 1",
-      "dev": "vite",
-      "build": "vite build",
-      "preview": "vite preview",
-      "start": "vite"
-    },
-    "repository": {
-      "type": "git",
-      "url": "git+https://github.com/CSE110-Coblenz/cse-110-project-team-8.git"
-=======
         "test": "jest",
         "dev": "vite",
         "build": "vite build",
@@ -27,23 +16,11 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/CSE110-Coblenz/cse-110-project-team-8.git"
->>>>>>> db607b222b53b4dc1d1b878c9232db2eec961018
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "bugs": {
-<<<<<<< HEAD
-      "url": "https://github.com/CSE110-Coblenz/cse-110-project-team-8/issues"
-    },
-    "homepage": "https://github.com/CSE110-Coblenz/cse-110-project-team-8#readme",
-    "devDependencies": {
-      "@types/node": "^24.9.2",
-      "typescript": "^5.9.3",
-      "vite": "^7.1.12"
-    }
-  }
-=======
         "url": "https://github.com/CSE110-Coblenz/cse-110-project-team-8/issues"
     },
     "homepage": "https://github.com/CSE110-Coblenz/cse-110-project-team-8#readme",
@@ -57,4 +34,3 @@
         "vite": "^7.1.12"
     }
 }
->>>>>>> db607b222b53b4dc1d1b878c9232db2eec961018
