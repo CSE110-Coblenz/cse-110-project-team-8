@@ -2,13 +2,19 @@
 // The highlight is how the character should be displayed (e.g., color, style)
 export type Cell = { ch: string; hl?: string };
 
+export enum Mode {
+    Normal = "normal",
+    Insert = "insert",
+}
+
 export default class VimGrid {
-    readonly numRows: number;
-    readonly numCols: number;
+    numRows: number;
+    numCols: number;
     private grid: Cell[][];
     private cursor: { row: number; col: number };
+    private mode: Mode = Mode.Normal;
 
-    constructor(numRows: number, numCols: number, Cell: Cell = { ch: ' ' }) {
+    constructor(numRows: number, numCols: number, Cell: Cell = { ch: '' }) {
         this.numRows = numRows;
         this.numCols = numCols;
         this.grid = Array.from({ length: numRows }, () =>
@@ -22,7 +28,16 @@ export default class VimGrid {
         const width = cols ?? Math.max(1, ...lines.map((l) => l.length));
         const height = Math.max(lines.length, 1);
         const buf = new VimGrid(height, width);
-        lines.forEach((line, r) => { for (let c = 0; c < width; c++) buf.set(r, c, { ch: line[c] ?? " " }); });
+        for (let r = 0; r < height; r++) {
+            for (let c = 0; c < width; c++) {
+                buf.grid[r][c] = { ch: '' };
+            }
+        }
+        lines.forEach((line, r) => { 
+            for (let c = 0; c < line.length && c < width; c++) {
+                buf.set(r, c, { ch: line[c] });
+            }
+        });
         if (initialCursor) {
             buf.setCursor(initialCursor.row, initialCursor.col);
         }
@@ -61,7 +76,8 @@ export default class VimGrid {
 
     setCursor(row: number, col: number): void {
         const r = Math.max(0, Math.min(this.numRows - 1, row));
-        const c = Math.max(0, Math.min(this.numCols - 1, col));
+        const maxCol = this.mode === Mode.Insert ? this.numCols : this.numCols - 1;
+        const c = Math.max(0, Math.min(maxCol, col));
         this.cursor = { row: r, col: c };
     }
 
@@ -69,6 +85,77 @@ export default class VimGrid {
         const r = Math.max(0, Math.min(this.numRows - 1, this.cursor.row + dr));
         const c = Math.max(0, Math.min(this.numCols - 1, this.cursor.col + dc));
         this.cursor = { row: r, col: c };
+    }
+
+    // Check if a cell is empty
+    isEmpty(r: number, c: number): boolean {
+        if (!this.inBounds(r, c)) return true;
+        const cell = this.get(r, c);
+        return cell.ch === '';
+    }
+
+    // Find the rightmost filled cell in a row (including whitespace)
+    // Returns -1 if the row is completely empty
+    findRightmostOccupied(row: number): number {
+        if (!this.inBounds(row, 0)) return -1;
+        
+        for (let c = this.numCols - 1; c >= 0; c--) {
+            if (!this.isEmpty(row, c)) {
+                return c;
+            }
+        }
+        return -1;
+    }
+
+    // Set Vim mode
+    setMode(mode: Mode): void {
+        this.mode = mode;
+    }
+
+    // Returns Vim mode
+    getMode(): Mode {
+        return this.mode;
+    }
+
+    // Add a new row at the specified index
+    addRow(atIndex?: number): void {
+        const index = atIndex ?? this.numRows;
+        const newRow = Array.from({ length: this.numCols }, () => ({ ch: '' }));
+        this.grid.splice(index, 0, newRow);
+        this.numRows++;
+    }
+
+    // Check if a row is completely empty
+    isRowEmpty(row: number): boolean {
+        if (!this.inBounds(row, 0)) return true;
+        return this.findRightmostOccupied(row) < 0;
+    }
+
+    // Append one row to the grid
+    appendRow(): void {
+        const newRow = Array.from({ length: this.numCols }, () => ({ ch: '' }));
+        this.grid.push(newRow);
+        this.numRows++;
+    }
+
+    // Append one column to the grid
+    appendColumn(): void {
+        for (let r = 0; r < this.grid.length; r++) {
+            this.grid[r].push({ ch: '' });
+        }
+        this.numCols++;
+    }
+
+    // Remove a row at the specified index
+    removeRow(atIndex: number): void {
+        if (atIndex < 0 || atIndex >= this.numRows) return;
+        if (this.numRows <= 1) return;
+        
+        this.grid.splice(atIndex, 1);
+        this.numRows--;
+        if (this.cursor.row >= this.numRows) {
+            this.cursor.row = Math.max(0, this.numRows - 1);
+        }
     }
   }
 

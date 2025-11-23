@@ -1,4 +1,4 @@
-import VimGrid from "./vimgrid.js";
+import VimGrid from "./VimGrid.js";
 
 export interface Keyframe {
   tMs: number;
