@@ -1,5 +1,6 @@
 import Konva from "konva";
 import VimGrid, { Mode } from "./VimGrid.js";
+import { TAB_LEFT, TAB_MIDDLE, TAB_RIGHT } from "./VimController.js";
 
 export class GridView {
     private group: Konva.Group;
@@ -20,6 +21,7 @@ export class GridView {
     private readonly HL_COLORS: Record<string, { fill?: string; text?: string }> = {
     StatusLine: { fill: "#1f2937", text: "#e5e7eb" },
     Visual: { fill: "#1d4ed8", text: "#ffffff" },
+    Mismatch: { fill: "#000000ff", text: "#ff0000" }, // Red text for mismatched cells
     };
 
     constructor(grid: VimGrid, viewWidth = window.innerWidth / 2, viewHeight = window.innerHeight, cellW = 12, cellH = 20, fontSize = 16) {
@@ -189,8 +191,10 @@ export class GridView {
                 const text = this.cells[r][c];
                 const hl = cell.hl ? this.HL_COLORS[cell.hl] : undefined; 
                 rect.setAttrs({ fill: hl?.fill || "#000000ff" });
+                // Display tab characters as spaces
+                const displayChar = (cell.ch === TAB_LEFT || cell.ch === TAB_MIDDLE || cell.ch === TAB_RIGHT) ? " " : (cell.ch || " ");
                 text.setAttrs({
-                    text: cell.ch || " ",
+                    text: displayChar,
                     fill: hl?.text || "#e5e5e5",
                 });
             }
@@ -199,10 +203,8 @@ export class GridView {
     }
 
     setCursor(row: number, col: number) {
-        const validRow = Math.max(0, Math.min(this.grid.numRows - 1, row));
-        const maxCol = this.grid.getMode() === Mode.Insert ? this.grid.numCols : this.grid.numCols - 1;
-        const validCol = Math.max(0, Math.min(maxCol, col));
-        this.cursor.position({ x: validCol * this.cellW, y: validRow * this.cellH });
+        // No validation needed - values come from VimGrid.getCursor() which are already validated
+        this.cursor.position({ x: col * this.cellW, y: row * this.cellH });
         this.cursor.visible(true);
         this.group.getLayer()?.batchDraw();
         this.cursor.moveToTop();
