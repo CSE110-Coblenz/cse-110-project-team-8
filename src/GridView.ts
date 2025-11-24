@@ -6,6 +6,9 @@ export class GridView {
     private cells: Konva.Text[][] = [];
     private highlights: Konva.Rect[][] = [];
     private grid: VimGrid;
+    private background: Konva.Rect;
+    private viewportWidth: number;
+    private viewportHeight: number;
 
     private readonly cellW: number;
     private readonly cellH: number;
@@ -19,7 +22,7 @@ export class GridView {
     Visual: { fill: "#1d4ed8", text: "#ffffff" },
     };
 
-    constructor(grid: VimGrid, positionX: number, cellW = 12, cellH = 20, fontSize = 16) {
+    constructor(grid: VimGrid, viewWidth = window.innerWidth / 2, viewHeight = window.innerHeight, cellW = 12, cellH = 20, fontSize = 16) {
         this.group = new Konva.Group();
         this.grid = grid;
         this.cellW = cellW;
@@ -27,15 +30,17 @@ export class GridView {
         this.fontSize = fontSize;
         this.fontFamily =
             'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace';
+        this.viewportWidth = viewWidth;
+        this.viewportHeight = viewHeight;
 
-        const background = new Konva.Rect({
+        this.background = new Konva.Rect({
             x: 0,
             y: 0,
-            width: window.innerWidth/2,
-            height: window.innerHeight,
+            width: viewWidth,
+            height: viewHeight,
             fill: "black", 
         });
-        this.group.add(background);
+        this.group.add(this.background);
 
         // build static grid of rects + text
         const rows = grid.getGrid();
@@ -182,7 +187,7 @@ export class GridView {
                 const cell = rows[r][c];
                 const rect = this.highlights[r][c];
                 const text = this.cells[r][c];
-                const hl = cell.hl ? this.HL_COLORS[cell.hl] : undefined; // type: {fill?:string; text?:string} | undefined
+                const hl = cell.hl ? this.HL_COLORS[cell.hl] : undefined; 
                 rect.setAttrs({ fill: hl?.fill || "#000000ff" });
                 text.setAttrs({
                     text: cell.ch || " ",
@@ -193,7 +198,6 @@ export class GridView {
         this.group.getLayer()?.batchDraw();
     }
 
-    /** Move cursor to given row/col (purely visual) */
     setCursor(row: number, col: number) {
         const validRow = Math.max(0, Math.min(this.grid.numRows - 1, row));
         const maxCol = this.grid.getMode() === Mode.Insert ? this.grid.numCols : this.grid.numCols - 1;
@@ -204,7 +208,6 @@ export class GridView {
         this.cursor.moveToTop();
     }
 
-    /** Show/hide cursor (controller uses this for blinking) */
     setCursorVisible(visible: boolean) {
         this.cursor.visible(visible);
         this.group.getLayer()?.batchDraw();
@@ -217,5 +220,12 @@ export class GridView {
     getVimGrid(): VimGrid {
         return this.grid;
     }
-}
 
+    setViewport(width: number, height: number) {
+        this.viewportWidth = width;
+        this.viewportHeight = height;
+        this.background.width(width);
+        this.background.height(height);
+        this.group.getLayer()?.batchDraw();
+    }
+}

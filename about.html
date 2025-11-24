@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About | VimBeat</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="about-page">
+  <header class="navbar">
+    <div class="logo">VimBeat</div>
+    <nav>
+      <button class="nav-btn" onclick="window.location.href='index.html#'">Play Game</button>
+      <button class="nav-btn" onclick="window.location.href='about.html'" aria-current="page">About The Game</button>
+      <button class="nav-btn" id="resetBtn">Reset The Game</button>
+    </nav>
+    <div class="user-info">
+      <div class="user-badge">
+        <p id="userWelcome" class="welcome">Welcome Back, Player!</p>
+        <div class="stats">
+          <span id="userScore">Score: --</span>
+          <span class="stat-sep">          </span>
+          <span id="userLevels">Level: --</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="about">
+      <div class="about-card">
+        <h2>About The Game</h2>
+        <p>VimBeat is a rhythm practice ground for Vim, developed by a group from CSE 110 at UCSD.</p>
+        <div class="about-grid">
+          <div class="about-item">
+            <h3>Move</h3>
+            <p>Use Vim arrows: <code>h</code>/<code>j</code>/<code>k</code>/<code>l</code> or the arrow keys.</p>
+          </div>
+          <div class="about-item">
+            <h3>Type</h3>
+            <p>Press <code>i</code> for insert mode, type characters, <code>Esc</code> to return to normal.</p>
+          </div>
+          <div class="about-item">
+            <h3>Exit</h3>
+            <p>When you’re done, simply press <code>F9</code> to see the results.</p>
+          </div>
+          <div class="about-item">
+            <h3>Goals</h3>
+            <p>Match the expected grid on the right. Your score will be determined on your accuracy.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 VimBeat. All rights reserved.</p>
+  </footer>
+  <script src="src/aboutPage.ts" type="module"></script>
+</body>
+</html>
