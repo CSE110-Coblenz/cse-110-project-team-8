@@ -118,26 +118,7 @@ export default class VimGrid {
 
     // Cursor methods
     getCursor(): { row: number; col: number } {
-        // Return the effective column (virtual column if valid, otherwise rightmost valid)
-        const rightmost = this.findRightmostOccupied(this.cursor.row);
-        let effectiveCol = this.virtualCol;
-        
-        if (rightmost < 0) {
-            // Empty line - use column 0
-            effectiveCol = 0;
-        } else {
-            // Check if virtual column is valid on this line
-            const maxCol = this.mode === Mode.Insert ? Math.min(rightmost + 1, this.numCols - 1) : rightmost;
-            if (this.virtualCol > maxCol) {
-                // Virtual column is beyond line - use rightmost valid
-                effectiveCol = maxCol;
-            } else {
-                // Virtual column is valid - use it
-                effectiveCol = this.virtualCol;
-            }
-        }
-        
-        return { row: this.cursor.row, col: effectiveCol };
+        return { row: this.cursor.row, col: this.cursor.col };
     }
 
     getVirtualColumn(): number {

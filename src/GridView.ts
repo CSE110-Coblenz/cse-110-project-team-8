@@ -199,10 +199,8 @@ export class GridView {
 
     /** Move cursor to given row/col (purely visual) */
     setCursor(row: number, col: number) {
-        const validRow = Math.max(0, Math.min(this.grid.numRows - 1, row));
-        const maxCol = this.grid.getMode() === Mode.Insert ? this.grid.numCols : this.grid.numCols - 1;
-        const validCol = Math.max(0, Math.min(maxCol, col));
-        this.cursor.position({ x: validCol * this.cellW, y: validRow * this.cellH });
+        // No validation needed - values come from VimGrid.getCursor() which are already validated
+        this.cursor.position({ x: col * this.cellW, y: row * this.cellH });
         this.cursor.visible(true);
         this.group.getLayer()?.batchDraw();
         this.cursor.moveToTop();
