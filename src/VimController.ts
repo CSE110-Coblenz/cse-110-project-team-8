@@ -397,15 +397,7 @@ export class VimController {
         
         // If there's content to the right of the cursor, move it to the new line
         if (rightmost >= 0 && col <= rightmost) {
-            // Calculate how many characters need to be moved
-            const charsToMove = rightmost - col + 1;
-            
-            // Ensure we have enough rows
-            if (row + 1 >= this.grid.numRows) {
-                this.grid.appendRow();
-            }
-            
-            // Insert a new row
+            // Insert a new row at row + 1
             this.grid.addRow(row + 1);
             
             // Move content from cursor position to end of line to the new line
@@ -424,9 +416,6 @@ export class VimController {
             }
         } else {
             // No content to move, just insert a new empty line
-            if (row + 1 >= this.grid.numRows) {
-                this.grid.appendRow();
-            }
             this.grid.addRow(row + 1);
         }
         
