@@ -1,6 +1,9 @@
+// Single Responsibility: data rendering, persistence is handled by progressStore.ts
+// Testability: function is small and isolated
+
 import { getCurrentLevelName, loadProgress } from "./progressStore.js";
 
-export function renderUserStats() {
+export function renderUserStats(): void {
   const progress = loadProgress();
   const highestCompleted =
     progress.levels.length > 0
@@ -10,9 +13,7 @@ export function renderUserStats() {
   const levelDisplay =
     storedLevel ??
     highestCompleted ??
-    (progress.levels.length > 0
-      ? String(progress.levels.length)
-      : "1");
+    (progress.levels.length > 0 ? String(progress.levels.length) : "1");
   const totalScore = progress.levels.reduce((sum, level) => sum + level.score, 0);
 
   const userScore = document.getElementById("userScore");

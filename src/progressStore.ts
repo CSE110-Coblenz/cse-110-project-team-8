@@ -34,7 +34,7 @@ function writeProgress(data: ProgressData): void {
   try {
     storage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch {
-    // Ignore quota or serialization errors to avoid breaking gameplay
+
   }
 }
 
@@ -58,7 +58,7 @@ export function setCurrentLevelName(name: string): void {
   try {
     storage.setItem(CURRENT_LEVEL_KEY, name);
   } catch {
-    // ignore
+
   }
 }
 

@@ -1,3 +1,6 @@
+// Single responsibility (rendering and event wiring),
+// other business logic (scoring, persistence) are kept in level.ts
+
 export interface LevelResult {
   levelName: string;
   score: number;
@@ -24,12 +27,11 @@ export class ResultScreen {
     this.root.id = "result-overlay";
     this.root.className = "result-overlay";
     this.root.innerHTML = `
-      <div class="result-blur"></div>
-      <div class="result-card">
+      <div class="result-card pause-card">
         <div class="result-top-row">
           <div class="result-burst">✨</div>
           <div class="result-heading">
-            <p class="result-eyebrow">Level Cleared</p>
+            <p class="result-eyebrow">Level Achieved</p>
           <h2 id="result-level-name">--</h2>
           </div>
           <div class="result-score-block">
@@ -47,10 +49,9 @@ export class ResultScreen {
         </div>
 
         <div class="result-actions">
-          <button id="continueBtn" class="result-btn primary">Return to Game</button>
-          <button id="exitBtn" class="result-btn ghost warn-trigger">Exit to Home</button>
+          <button id="continueBtn" class="result-btn primary">Next Level</button>
+          <button id="exitBtn" class="result-btn ghost">Exit to Home</button>
         </div>
-        <p class="exit-warning" aria-live="polite">You're about to lose this level's progress.</p>
 
         <div class="confetti"></div>
       </div>
@@ -83,6 +84,7 @@ export class ResultScreen {
     });
   }
 
+  // Inject data
   show(result: LevelResult, handlers?: ActionHandlers) {
     this.currentHandlers = handlers;
     this.levelNameEl.textContent = result.levelName;
@@ -105,6 +107,7 @@ export class ResultScreen {
     return this.root.classList.contains("visible");
   }
 
+  // Display Animation
   private launchConfetti() {
     const confettiContainer = this.root.querySelector(".confetti");
     if (!confettiContainer) return;

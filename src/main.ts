@@ -25,6 +25,7 @@ let gamePaused = false;
 let pauseOverlay: PauseOverlay | undefined;
 let gameHistoryEntryActive = false;
 let suppressNextPopstate = false;
+let levelCompleted = false;
 
 const DEFAULT_LEVEL_NUMBER = 1;
 
@@ -48,6 +49,16 @@ function handleKeyPress(event: KeyboardEvent) {
   dualView?.updateModeLabel();
   const cursor = leftGrid.getCursor();
   leftView.setCursor(cursor.row, cursor.col);
+
+  const autoScore = computeScoreFromGrids();
+  if (autoScore === 100 && !levelCompleted) {
+    levelCompleted = true;
+    handleLevelComplete({
+      levelName: getActiveLevelDisplay(),
+      score: autoScore,
+      timeMs: getLevelElapsedTime(),
+    });
+  }
 }
 
 function ensureGameVisible() {
@@ -149,12 +160,14 @@ function handleLevelComplete(result: LevelResult, options?: CompleteOptions) {
       ensureGameVisible();
       levelStartTime = performance.now();
       levelElapsedActive = 0;
+      levelCompleted = false;
     },
     onExit: () => {
       resultScreen?.hide();
       exitToHome();
     },
   });
+  levelCompleted = true;
 }
 
 function startGame() {
@@ -168,6 +181,7 @@ function startGame() {
   setPauseState(false);
   setCurrentLevelName(getActiveLevelName());
   levelElapsedActive = 0;
+  levelCompleted = false;
   pushGameHistoryEntry();
 
   const viewWidth = window.innerWidth / 2;
