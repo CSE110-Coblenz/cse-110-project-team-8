@@ -11,10 +11,14 @@ export interface Keyframe {
 
 export interface LevelData {
   keyframes: Keyframe[];
+  name?: string;
+  description?: string;
 }
 
 export class Level {
     private readonly keyframes: Keyframe[];
+    private readonly name: string;
+    private readonly description: string;
     private stage: Konva.Stage | null = null;
     private controller: VimController | null = null;
     private dualView: DualGridView | null = null;
@@ -32,10 +36,26 @@ export class Level {
 
     /**
      * Creates a new Level instance from level data.
-     * @param levelData: level data containing keyframes
+     * @param levelData: level data containing keyframes and optional metadata
      */
     constructor(levelData: LevelData) {
         this.keyframes = levelData.keyframes;
+        this.name = levelData.name || "Untitled Level";
+        this.description = levelData.description || "";
+    }
+
+    /**
+     * Gets the level name.
+     */
+    getName(): string {
+        return this.name;
+    }
+
+    /**
+     * Gets the level description.
+     */
+    getDescription(): string {
+        return this.description;
     }
 
     /**

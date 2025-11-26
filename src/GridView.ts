@@ -19,6 +19,7 @@ export class GridView {
     StatusLine: { fill: "#1f2937", text: "#e5e7eb" },
     Visual: { fill: "#1d4ed8", text: "#ffffff" },
     Mismatch: { fill: "#000000ff", text: "#ff0000" }, // Red text for mismatched cells
+    LevelSelect: { fill: "#3b82f6", text: "#ffffff" }, // Light blue for level select highlighting
     };
 
     constructor(grid: VimGrid, positionX: number, cellW = 12, cellH = 20, fontSize = 16) {

@@ -1,0 +1,25 @@
+{
+  "name": "Level 3: Loops",
+  "description": "Master loop structures",
+  "keyframes": [
+    {
+      "tMs": 0,
+      "state": [
+        "for (let i = 0; i < 10; i++) {",
+        "\tconsole.log(i)",
+        "}"
+      ]
+    },
+    {
+      "tMs": 15000,
+      "state": [
+        "for (let i = 0; i < 10; i++) {",
+        "\tif (i % 2 === 0) {",
+        "\t\tconsole.log(i)",
+        "\t}",
+        "}"
+      ]
+    }
+  ]
+}
+

@@ -1,0 +1,19 @@
+{
+  "name": "Level 1: Hello World",
+  "description": "A simple introduction to vim editing",
+  "keyframes": [
+    {
+      "tMs": 0,
+      "state": [
+        "console.log('Hello')"
+      ]
+    },
+    {
+      "tMs": 5000,
+      "state": [
+        "console.log('Hello, World!')"
+      ]
+    }
+  ]
+}
+
