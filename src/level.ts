@@ -172,6 +172,10 @@ export class Level {
             this.stage.width(window.innerWidth);
             this.stage.height(window.innerHeight);
         }
+
+        if (this.dualView) {
+            this.dualView.resize(window.innerWidth, window.innerHeight);
+        }
     };
 
     /**
