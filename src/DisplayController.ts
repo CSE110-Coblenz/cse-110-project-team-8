@@ -15,7 +15,6 @@ export default class DisplayController {
     this.view.setCursor(cursor.row, cursor.col);
   }
 
-  /** Movement (clamped) */
   moveCursorBy(dr: number, dc: number) {
     this.grid.moveCursorBy(dr, dc);
     const cursor = this.grid.getCursor();
@@ -52,7 +51,6 @@ export default class DisplayController {
     this.view.update(this.grid);
   }
 
-  /** Expose cursor (if needed elsewhere) */
   getCursor() { return this.grid.getCursor(); }
 }
 

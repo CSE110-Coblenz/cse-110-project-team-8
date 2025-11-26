@@ -342,7 +342,7 @@ export class Level {
             // Create the view (VimGridView)
             this.leftView = new GridView(this.leftGrid, 0);
             this.rightView = new GridView(this.rightGrid, this.HALF_VIEW_WIDTH);
-            this.dualView = new DualGridView(this.leftView, this.rightView);
+            this.dualView = new DualGridView(this.leftView, this.rightView, this.HALF_VIEW_WIDTH, window.innerHeight);
 
             layer.add(this.dualView.getGroup());
             
