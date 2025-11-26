@@ -42,10 +42,10 @@ export class LevelSelect {
         const response = await fetch("/src/levels/index.json");
         const levelIndex = await response.json() as LevelIndex;
         
-        // Load all levels
+        // Load all levels with their IDs
         const levels = await Promise.all(
             levelIndex.levels.map(entry => 
-                Level.fromFile(`/src/levels/${entry.file}`)
+                Level.fromFile(`/src/levels/${entry.file}`, undefined, entry.id)
             )
         );
         
@@ -94,6 +94,15 @@ export class LevelSelect {
             lines.push("Description:");
             const descLines = this.wrapText(selected.getDescription(), 30);
             descLines.forEach(line => lines.push(line));
+            
+            // Show level score if available
+            if (player) {
+                const levelScore = player.getLevelScore(selected.getId());
+                if (levelScore > 0) {
+                    lines.push("");
+                    lines.push(`Level Score: ${levelScore.toLocaleString()}`);
+                }
+            }
         }
         
         lines.push("");
@@ -103,11 +112,11 @@ export class LevelSelect {
         if (player) {
             lines.push("Player:");
             lines.push(`Name: ${player.name}`);
-            lines.push(`Score: ${player.score.toLocaleString()}`);
+            lines.push(`Total Score: ${player.score.toLocaleString()}`);
         } else {
             lines.push("Player:");
             lines.push("Name: Guest");
-            lines.push("Score: 0");
+            lines.push("Total Score: 0");
         }
         
         const maxWidth = Math.max(...lines.map(line => line.length), 30);
@@ -289,6 +298,16 @@ export class LevelSelect {
             window.addEventListener("resize", this.handleResize);
             
             this.menuInitialized = true;
+        }
+    }
+
+    /**
+     * Refreshes the level select view (updates scores, etc.)
+     */
+    refresh(): void {
+        if (this.rightView && this.rightGrid && this.stage) {
+            this.updateRightView();
+            this.stage.getLayers()[0]?.draw();
         }
     }
 

@@ -9,9 +9,45 @@
       ]
     },
     {
-      "tMs": 5000,
+      "tMs": 15000,
       "state": [
         "console.log('Hello, World!')"
+      ]
+    },
+    {
+      "tMs": 20000,
+      "state": [
+        "const greeting = 'Hello, World!';",
+        "console.log(greeting)"
+      ]
+    },
+    {
+      "tMs": 25000,
+      "state": [
+        "const greeting = 'Hello, World!';",
+        "console.log(greeting);",
+        "console.log('Welcome!')"
+      ]
+    },
+    {
+      "tMs": 20000,
+      "state": [
+        "function sayHello() {",
+        "\tconst greeting = 'Hello, World!';",
+        "\tconsole.log(greeting);",
+        "\tconsole.log('Welcome!')",
+        "}"
+      ]
+    },
+    {
+      "tMs": 20000,
+      "state": [
+        "function sayHello() {",
+        "\tconst greeting = 'Hello, World!';",
+        "\tconsole.log(greeting);",
+        "\tconsole.log('Welcome!');",
+        "\treturn greeting;",
+        "}"
       ]
     }
   ]

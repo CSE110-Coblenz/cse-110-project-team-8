@@ -18,7 +18,7 @@
       ]
     },
     {
-      "tMs": 20000,
+      "tMs": 10000,
       "state": [
         "function hello(name) {",
         "\tconsole.log('Hello, world!')",
@@ -27,7 +27,7 @@
       ]
     },
     {
-      "tMs": 30000,
+      "tMs": 10000,
       "state": [
         "function hello(name) {",
         "\tconsole.log('Hello, ' + name + '!')",
@@ -36,7 +36,7 @@
       ]
     },
     {
-      "tMs": 40000,
+      "tMs": 10000,
       "state": [
         "function hello(name) {",
         "\tif (!name) {",
@@ -48,7 +48,7 @@
       ]
     },
     {
-      "tMs": 50000,
+      "tMs": 10000,
       "state": [
         "function hello(name) {",
         "\tif (!name) {",
@@ -61,7 +61,7 @@
       ]
     },
     {
-      "tMs": 60000,
+      "tMs": 10000,
       "state": [
         "function hello(name) {",
         "\tif (!name) {",
@@ -74,7 +74,7 @@
       ]
     },
     {
-      "tMs": 70000,
+      "tMs": 10000,
       "state": [
         "function hello(name) {",
         "\tif (!name) {",
@@ -87,7 +87,7 @@
       ]
     },
     {
-      "tMs": 80000,
+      "tMs": 10000,
       "state": [
         "function hello(name = 'world') {",
         "\tconst message = `Hello, ${name}!`;",
@@ -97,7 +97,7 @@
       ]
     },
     {
-      "tMs": 90000,
+      "tMs": 10000,
       "state": [
         "function hello(name = 'world') {",
         "\tconst message = `Hello, ${name}!`;",
