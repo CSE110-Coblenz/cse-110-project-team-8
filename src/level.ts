@@ -2,6 +2,7 @@ import VimGrid from "./VimGrid.js";
 import Konva from "konva";
 import { GridView } from "./GridView.js";
 import { DualGridView } from "./DualGridView.js";
+import { GameView } from "./GameView.js";
 import { VimController, TAB_LEFT, TAB_MIDDLE, TAB_RIGHT } from "./VimController.js";
 
 export interface Keyframe {
@@ -17,6 +18,7 @@ export class Level {
     private readonly keyframes: Keyframe[];
     private stage: Konva.Stage | null = null;
     private controller: VimController | null = null;
+    private gameView: GameView | null = null;
     private dualView: DualGridView | null = null;
     private leftView: GridView | null = null;
     private rightView: GridView | null = null;
@@ -156,10 +158,10 @@ export class Level {
         
         // Mark mismatches after input for real-time feedback
         this.markMismatches();
-        
+
         // Update the view after handling input
         this.leftView.update(this.leftGrid);
-        this.dualView?.updateModeLabel();
+        this.gameView?.updateModeLabel();
         const cursor = this.leftGrid.getCursor();
         this.leftView.setCursor(cursor.row, cursor.col);
     };
@@ -173,8 +175,8 @@ export class Level {
             this.stage.height(window.innerHeight);
         }
 
-        if (this.dualView) {
-            this.dualView.resize(window.innerWidth, window.innerHeight);
+        if (this.gameView) {
+            this.gameView.resize(window.innerWidth, window.innerHeight);
         }
     };
 
@@ -253,15 +255,15 @@ export class Level {
             const totalTimeForKeyframe = currentKeyframe.tMs - previousTime;
 
             // Update timer display
-            if (this.dualView) {
-                this.dualView.updateTimer(Math.max(0, timeRemaining), totalTimeForKeyframe);
+            if (this.gameView) {
+                this.gameView.updateTimer(Math.max(0, timeRemaining), totalTimeForKeyframe);
             }
 
             // Timer expired - score and move to next keyframe
             if (timeRemaining <= 0) {
                 // Show "TIME'S UP!" message
-                if (this.dualView) {
-                    this.dualView.showTimesUp();
+                if (this.gameView) {
+                    this.gameView.showTimesUp();
                 }
 
                 // Compare leftGrid with expected keyframe
@@ -282,8 +284,8 @@ export class Level {
                 this.updateRightGrid();
 
                 // Update score display UI
-                if (this.dualView) {
-                    this.dualView.updateScore(this.score, this.currentKeyframeIndex, this.keyframes.length);
+                if (this.gameView) {
+                    this.gameView.updateScore(this.score, this.currentKeyframeIndex, this.keyframes.length);
                 }
             }
         }
@@ -361,9 +363,15 @@ export class Level {
             // Create the view (VimGridView)
             this.leftView = new GridView(this.leftGrid, 0);
             this.rightView = new GridView(this.rightGrid, this.HALF_VIEW_WIDTH);
-            this.dualView = new DualGridView(this.leftView, this.rightView);
 
-            layer.add(this.dualView.getGroup());
+            // Create dual grid view with proper dimensions
+            const gridHeight = window.innerHeight - 80; // Subtract score panel height
+            this.dualView = new DualGridView(this.leftView, this.rightView, window.innerWidth, gridHeight);
+
+            // Create game view that contains both score display and dual grid view
+            this.gameView = new GameView(this.dualView, window.innerWidth, window.innerHeight);
+
+            layer.add(this.gameView.getGroup());
             
             // Set initial cursor position
             const cursor = this.leftGrid.getCursor();
@@ -384,8 +392,8 @@ export class Level {
             this.checkInterval = window.setInterval(this.checkKeyframes, 100);
 
             // Initialize score display
-            if (this.dualView) {
-                this.dualView.updateScore(0, 0, this.keyframes.length);
+            if (this.gameView) {
+                this.gameView.updateScore(0, 0, this.keyframes.length);
             }
 
             this.gameInitialized = true;
