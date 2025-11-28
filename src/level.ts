@@ -244,32 +244,47 @@ export class Level {
         // Check if we've reached the current keyframe's timestamp
         if (this.currentKeyframeIndex < this.keyframes.length) {
             const currentKeyframe = this.keyframes[this.currentKeyframeIndex];
-            
-            if (currentTime >= currentKeyframe.tMs) {
+            const timeRemaining = currentKeyframe.tMs - currentTime;
+
+            // Get the time for this keyframe (time between previous and current)
+            const previousTime = this.currentKeyframeIndex > 0
+                ? this.keyframes[this.currentKeyframeIndex - 1].tMs
+                : 0;
+            const totalTimeForKeyframe = currentKeyframe.tMs - previousTime;
+
+            // Update timer display
+            if (this.dualView) {
+                this.dualView.updateTimer(Math.max(0, timeRemaining), totalTimeForKeyframe);
+            }
+
+            // Timer expired - score and move to next keyframe
+            if (timeRemaining <= 0) {
+                // Show "TIME'S UP!" message
+                if (this.dualView) {
+                    this.dualView.showTimesUp();
+                }
+
                 // Compare leftGrid with expected keyframe
                 const expectedGrid = Level.keyframeToVimGrid(currentKeyframe);
                 const keyframeScore = Level.score(expectedGrid, this.leftGrid);
-                
+
                 // Store this keyframe's score
                 this.keyframeScores.push(keyframeScore);
-                
+
                 // Update total score (average of all keyframe scores so far)
-                const oldScore = this.score;
                 if (this.keyframeScores.length > 0) {
                     const sum = this.keyframeScores.reduce((a, b) => a + b, 0);
                     this.score = Math.round(sum / this.keyframeScores.length);
                 }
-                
-                // Log score when it's updated
-                if (this.score !== oldScore || this.keyframeScores.length === 1) {
-                    console.log(`Current score: ${this.score}`);
-                }
-                
-                console.log(`Keyframe ${this.currentKeyframeIndex} (t=${currentKeyframe.tMs}ms) score: ${keyframeScore}, Average: ${this.score}`);
 
                 // Move to next keyframe and update right grid
                 this.currentKeyframeIndex++;
                 this.updateRightGrid();
+
+                // Update score display UI
+                if (this.dualView) {
+                    this.dualView.updateScore(this.score, this.currentKeyframeIndex, this.keyframes.length);
+                }
             }
         }
     };
@@ -367,7 +382,12 @@ export class Level {
             
             // Set up interval to check keyframes (check every 100ms)
             this.checkInterval = window.setInterval(this.checkKeyframes, 100);
-            
+
+            // Initialize score display
+            if (this.dualView) {
+                this.dualView.updateScore(0, 0, this.keyframes.length);
+            }
+
             this.gameInitialized = true;
         }
     }
