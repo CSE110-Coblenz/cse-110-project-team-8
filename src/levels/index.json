@@ -1,0 +1,17 @@
+{
+  "levels": [
+    {
+      "id": "level1",
+      "file": "level1.json"
+    },
+    {
+      "id": "level2",
+      "file": "level2.json"
+    },
+    {
+      "id": "level3",
+      "file": "level3.json"
+    }
+  ]
+}
+
