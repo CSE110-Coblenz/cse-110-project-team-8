@@ -5,6 +5,8 @@ import { DualGridView } from "./DualGridView.js";
 import { GameView } from "./GameView.js";
 import { VimController, TAB_LEFT, TAB_MIDDLE, TAB_RIGHT } from "./VimController.js";
 import { PauseOverlay, PauseData } from "./pauseOverlay.js";
+import { LevelResult } from "./resultScreen.js";
+import { saveLevelResult } from "./progressStore.js";
 
 export interface Keyframe {
   tMs: number;
@@ -98,6 +100,17 @@ export class Level {
      */
     getDescription(): string {
         return this.description;
+    }
+
+    /**
+     * Gets the level result for saving.
+     */
+    getLevelResult(): LevelResult {
+        return {
+            levelName: this.name,
+            score: this.score,
+            timeMs: this.levelElapsedActive
+        };
     }
 
     /**
@@ -519,10 +532,14 @@ export class Level {
                 }
                 
                 if (isLastKeyframe) {
-                    // Last keyframe: flash longer (2 seconds), then return to level select
+                    // Last keyframe: flash longer (2 seconds), then save score and return to level select
                     this.pendingAdvance = window.setTimeout(() => {
                         this.pendingAdvance = null;
                         this.isInBuffer = false;
+
+                        // Save the level result to localStorage
+                        saveLevelResult(this.getLevelResult());
+
                         if (this.onComplete) {
                             this.onComplete();
                         }
@@ -572,13 +589,17 @@ export class Level {
                 }
                 
                 if (isLastKeyframe) {
-                    // Last keyframe: update left grid, flash longer (2 seconds), then return to level select
+                    // Last keyframe: update left grid, flash longer (2 seconds), then save score and return to level select
                     if (!isPerfect) {
                         this.forceUpdateLeftGrid(expectedGrid);
                     }
                     this.pendingAdvance = window.setTimeout(() => {
                         this.pendingAdvance = null;
                         this.isInBuffer = false;
+
+                        // Save the level result to localStorage
+                        saveLevelResult(this.getLevelResult());
+
                         if (this.onComplete) {
                             this.onComplete();
                         }

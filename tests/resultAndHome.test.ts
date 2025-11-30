@@ -15,7 +15,7 @@ describe("level completion updates UI", () => {
   it("updates result overlay and homepage stats after saving a level", () => {
     const resultScreen = new ResultScreen();
     const result: LevelResult = {
-      levelName: "3",
+      levelName: "Level 3: Test Level",
       score: 2450,
       timeMs: 123000,
     };
@@ -27,7 +27,7 @@ describe("level completion updates UI", () => {
     ).toBe("2,450");
     expect(
       document.getElementById("result-level-name")?.textContent
-    ).toBe("3");
+    ).toBe("Level 3: Test Level");
 
     saveLevelResult(result);
     setCurrentLevelName(result.levelName);
@@ -39,6 +39,6 @@ describe("level completion updates UI", () => {
     ).toBe("Score: 2,450");
     expect(
       document.getElementById("userLevels")?.textContent
-    ).toBe("Level: 3");
+    ).toBe("Highest Level: 3");
   });
 });
