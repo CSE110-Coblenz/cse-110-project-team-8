@@ -43,13 +43,16 @@ export function loadProgress(): ProgressData {
 }
 
 export function getCurrentLevelName(): string | null {
-  const storage = getStorage();
-  if (!storage) return null;
-  try {
-    return storage.getItem(CURRENT_LEVEL_KEY);
-  } catch {
-    return null;
-  }
+  const progress = readProgress();
+  if (progress.levels.length === 0) return null;
+
+  // Extract highest completed level number from level names
+  const highestLevel = Math.max(...progress.levels.map(level => {
+    const match = level.levelName.match(/Level (\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }));
+
+  return highestLevel > 0 ? String(highestLevel) : null;
 }
 
 export function setCurrentLevelName(name: string): void {
