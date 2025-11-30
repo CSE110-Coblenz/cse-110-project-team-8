@@ -6,6 +6,7 @@ import { Command } from "./simonSaysModel.js";
 export class SimonSaysView {
   private stage: Konva.Stage | null = null;
   private layer: Konva.Layer | null = null;
+  private progressText: Konva.Text | null = null;
 
   initialize(): void {
     // Show game container
@@ -84,7 +85,7 @@ export class SimonSaysView {
       align: "center",
     });
 
-    const progressText = new Konva.Text({
+    this.progressText = new Konva.Text({
       x: 0,
       y: 180,
       width: window.innerWidth,
@@ -97,8 +98,14 @@ export class SimonSaysView {
 
     this.layer.add(titleText);
     this.layer.add(instructionText);
-    this.layer.add(progressText);
+    this.layer.add(this.progressText);
     this.layer.draw();
+  }
+
+  updateProgress(sequenceLength: number, playerInputLength: number): void {
+    if (!this.progressText) return;
+    this.progressText.text(`Progress: ${playerInputLength}/${sequenceLength}`);
+    this.layer?.draw();
   }
 
   async flashCommand(command: Command, isPlayerInput: boolean): Promise<void> {

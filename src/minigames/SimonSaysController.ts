@@ -61,7 +61,10 @@ export class SimonSaysController {
     this.view.flashCommand(command, true);
 
     // Update progress display
-    this.showInputPrompt();
+    this.view.updateProgress(
+      this.model.getSequenceLength(),
+      this.model.getPlayerInputLength()
+    );
 
     // Check if sequence is complete
     if (this.model.isSequenceComplete()) {
