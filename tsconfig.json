@@ -8,5 +8,5 @@
     "jsx": "preserve",
     "lib": ["ESNext", "DOM", "DOM.Iterable"]
   },
-  "include": ["src"]
+  "include": ["src", "tests"]
 }
