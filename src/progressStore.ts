@@ -2,11 +2,18 @@ import { LevelResult } from "./resultScreen.js";
 
 export type StoredLevelResult = LevelResult & { completedAt: number };
 
+export type MinigameScore = {
+  name: string;
+  highScore: number;
+  completedAt: number;
+};
+
 const STORAGE_KEY = "vimbeat-progress";
 const CURRENT_LEVEL_KEY = "vimbeat-current-level";
 
 type ProgressData = {
   levels: StoredLevelResult[];
+  minigames?: MinigameScore[];
 };
 
 function getStorage(): Storage | undefined {
@@ -16,15 +23,15 @@ function getStorage(): Storage | undefined {
 
 function readProgress(): ProgressData {
   const storage = getStorage();
-  if (!storage) return { levels: [] };
+  if (!storage) return { levels: [], minigames: [] };
   try {
     const raw = storage.getItem(STORAGE_KEY);
-    if (!raw) return { levels: [] };
+    if (!raw) return { levels: [], minigames: [] };
     const parsed = JSON.parse(raw) as ProgressData;
-    if (!parsed.levels) return { levels: [] };
-    return { levels: parsed.levels };
+    if (!parsed.levels) return { levels: [], minigames: [] };
+    return { levels: parsed.levels, minigames: parsed.minigames || [] };
   } catch {
-    return { levels: [] };
+    return { levels: [], minigames: [] };
   }
 }
 
@@ -90,6 +97,39 @@ export function saveLevelResult(result: LevelResult): StoredLevelResult {
 
 export function getCompletedLevels(): StoredLevelResult[] {
   return readProgress().levels;
+}
+
+export function saveMinigameScore(name: string, score: number): void {
+  const data = readProgress();
+  if (!data.minigames) {
+    data.minigames = [];
+  }
+
+  const existingIndex = data.minigames.findIndex(mg => mg.name === name);
+  const newScore: MinigameScore = {
+    name,
+    highScore: score,
+    completedAt: Date.now()
+  };
+
+  if (existingIndex >= 0) {
+    const existing = data.minigames[existingIndex];
+    // Only update if new score is higher
+    if (score > existing.highScore) {
+      data.minigames[existingIndex] = newScore;
+    }
+  } else {
+    data.minigames.push(newScore);
+  }
+
+  writeProgress(data);
+}
+
+export function getMinigameScore(name: string): number {
+  const data = readProgress();
+  if (!data.minigames) return 0;
+  const minigame = data.minigames.find(mg => mg.name === name);
+  return minigame ? minigame.highScore : 0;
 }
 
 export function resetProgress(): void {
