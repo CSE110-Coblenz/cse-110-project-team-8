@@ -4,11 +4,14 @@ import { loadProgress } from "./progressStore.js";
 import { Level } from "./level.js";
 import { LevelSelect } from "./LevelSelect.js";
 import { Player } from "./player.js";
+import { SimonSays } from "./minigames/simonSays.js";
+import { renderUserStats } from "./userStats.js";
 
 let currentLevel: Level | null = null;
 let levelSelect: LevelSelect | null = null;
 let currentPlayer: Player | null = null;
 let resultScreen: ResultScreen | undefined;
+let simonSaysGame: SimonSays | null = null;
 
 function startLevel(level: Level) {
   // Level is already instantiated, just start the GUI
@@ -51,11 +54,20 @@ async function showLevelSelect() {
   if (!currentPlayer) {
     currentPlayer = new Player({ rank: 0, name: "Guest", score: 0 });
   }
-  
+
   // Always create a new level select instance when returning
   // (the previous one was stopped when the level started)
   levelSelect = new LevelSelect(startLevel, currentPlayer);
   await levelSelect.start();
+}
+
+function startSimonSays() {
+  simonSaysGame = new SimonSays();
+  simonSaysGame.setOnExit(() => {
+    simonSaysGame = null;
+    renderUserStats();
+  });
+  simonSaysGame.start();
 }
 
 // Initialize homepage on load
@@ -63,11 +75,17 @@ document.addEventListener("DOMContentLoaded", () => {
   resultScreen = new ResultScreen();
   initHomepage();
   loadProgress();
-  
+
   // Override the mainPlayBtn to show level select
   const mainPlayBtn = document.getElementById("mainPlayBtn");
   if (mainPlayBtn) {
     mainPlayBtn.addEventListener("click", showLevelSelect);
+  }
+
+  // Add minigames button handler
+  const minigamesBtn = document.getElementById("minigamesBtn");
+  if (minigamesBtn) {
+    minigamesBtn.addEventListener("click", startSimonSays);
   }
 
   document.addEventListener("vimbeat:level-complete", (event) => {

@@ -1,11 +1,13 @@
-# VimBeat
+# VimMaster
 
 ## Dependencies
 
 ### Runtime Dependencies
+
 - `konva` - 2D canvas library for animations and interactions
 
 ### Development Dependencies
+
 - `typescript` - TypeScript compiler
 - `vite` - Build tool and dev server
 
