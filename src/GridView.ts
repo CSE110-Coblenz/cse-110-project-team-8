@@ -7,6 +7,9 @@ export class GridView {
     private cells: Konva.Text[][] = [];
     private highlights: Konva.Rect[][] = [];
     private grid: VimGrid;
+    private background: Konva.Rect;
+    private viewportWidth: number;
+    private viewportHeight: number;
 
     private readonly cellW: number;
     private readonly cellH: number;
@@ -14,15 +17,16 @@ export class GridView {
     private readonly fontFamily: string;
     private cursor: Konva.Rect;
     private blinkInterval?: number;
-    private background: Konva.Rect;
 
     private readonly HL_COLORS: Record<string, { fill?: string; text?: string }> = {
     StatusLine: { fill: "#1f2937", text: "#e5e7eb" },
     Visual: { fill: "#1d4ed8", text: "#ffffff" },
     Mismatch: { fill: "#000000ff", text: "#ff0000" }, // Red text for mismatched cells
+    LevelSelect: { fill: "#3b82f6", text: "#ffffff" }, // Light blue for level select highlighting
+    Perfect: { fill: "#10b981", text: "#ffffff" }, // Green for perfect match feedback
     };
 
-    constructor(grid: VimGrid, positionX: number, cellW = 12, cellH = 20, fontSize = 16) {
+    constructor(grid: VimGrid, viewWidth = window.innerWidth / 2, viewHeight = window.innerHeight, cellW = 12, cellH = 20, fontSize = 16) {
         this.group = new Konva.Group();
         this.grid = grid;
         this.cellW = cellW;
@@ -30,13 +34,15 @@ export class GridView {
         this.fontSize = fontSize;
         this.fontFamily =
             'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New", monospace';
+        this.viewportWidth = viewWidth;
+        this.viewportHeight = viewHeight;
 
         this.background = new Konva.Rect({
             x: 0,
             y: 0,
-            width: window.innerWidth/2,
-            height: window.innerHeight,
-            fill: "black",
+            width: viewWidth,
+            height: viewHeight,
+            fill: "black", 
         });
         this.group.add(this.background);
 
@@ -185,7 +191,7 @@ export class GridView {
                 const cell = rows[r][c];
                 const rect = this.highlights[r][c];
                 const text = this.cells[r][c];
-                const hl = cell.hl ? this.HL_COLORS[cell.hl] : undefined; // type: {fill?:string; text?:string} | undefined
+                const hl = cell.hl ? this.HL_COLORS[cell.hl] : undefined; 
                 rect.setAttrs({ fill: hl?.fill || "#000000ff" });
                 // Display tab characters as spaces
                 const displayChar = (cell.ch === TAB_LEFT || cell.ch === TAB_MIDDLE || cell.ch === TAB_RIGHT) ? " " : (cell.ch || " ");
@@ -198,7 +204,6 @@ export class GridView {
         this.group.getLayer()?.batchDraw();
     }
 
-    /** Move cursor to given row/col (purely visual) */
     setCursor(row: number, col: number) {
         // No validation needed - values come from VimGrid.getCursor() which are already validated
         this.cursor.position({ x: col * this.cellW, y: row * this.cellH });
@@ -207,7 +212,6 @@ export class GridView {
         this.cursor.moveToTop();
     }
 
-    /** Show/hide cursor (controller uses this for blinking) */
     setCursorVisible(visible: boolean) {
         this.cursor.visible(visible);
         this.group.getLayer()?.batchDraw();
@@ -221,11 +225,11 @@ export class GridView {
         return this.grid;
     }
 
-    /** Resize the background to fit new dimensions */
-    resize(width: number, height: number): void {
+    setViewport(width: number, height: number) {
+        this.viewportWidth = width;
+        this.viewportHeight = height;
         this.background.width(width);
         this.background.height(height);
-        this.group.getLayer()?.draw();
+        this.group.getLayer()?.batchDraw();
     }
 }
-

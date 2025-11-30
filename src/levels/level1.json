@@ -1,0 +1,147 @@
+{
+  "name": "Level 1: Basic Editing",
+  "description": "Learn the fundamentals of vim: insert mode, movement, and text editing",
+  "keyframes": [
+    {
+      "tMs": 0,
+      "state": [
+        "Welcome to Vim!",
+        "",
+        "Use arrow keys to move down",
+        "",
+        "Press 'i' to enter Insert mode",
+        "",
+        "Now type: "
+      ]
+    },
+    {
+      "tMs": 25000,
+      "state": [
+        "Welcome to Vim!",
+        "",
+        "Use arrow keys to move down",
+        "",
+        "Press 'i' to enter Insert mode",
+        "",
+        "Now type: hello world"
+      ]
+    },
+    {
+      "tMs": 15000,
+      "state": [
+        "Welcome to Vim!",
+        "",
+        "Use arrow keys to move down",
+        "",
+        "Press 'i' to enter Insert mode",
+        "",
+        "Now type: hello world",
+        "",
+        "Press Escape to exit insert mode",
+        "Then use h j k l to move",
+        "Move to the top and change 'Welcome' to 'Hello'"
+      ]
+    },
+    {
+      "tMs": 20000,
+      "state": [
+        "Hello to Vim!",
+        "",
+        "Use arrow keys to move down",
+        "",
+        "Press 'i' to enter Insert mode",
+        "",
+        "Now type: hello world",
+        "",
+        "Press Escape to exit insert mode",
+        "Then use h j k l to move",
+        "Move to the top and change 'Welcome' to 'Hello'"
+      ]
+    },
+    {
+      "tMs": 35000,
+      "state": [
+        "Hello to Vim!",
+        "",
+        "Use arrow keys to move down",
+        "",
+        "Press 'i' to enter Insert mode",
+        "",
+        "Now type: hello world",
+        "",
+        "Press Escape to exit insert mode",
+        "Then use h j k l to move",
+        "Move to the top and change 'Welcome' to 'Hello'",
+        "",
+        "Let's write some code:",
+        "function greet() {",
+        "}"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Hello to Vim!",
+        "",
+        "Use arrow keys to move down",
+        "",
+        "Press 'i' to enter Insert mode",
+        "",
+        "Now type: hello world",
+        "",
+        "Press Escape to exit insert mode",
+        "Then use h j k l to move",
+        "Move to the top and change 'Welcome' to 'Hello'",
+        "",
+        "Let's write some code:",
+        "function greet() {",
+        "\treturn;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Hello to Vim!",
+        "",
+        "Use arrow keys to move down",
+        "",
+        "Press 'i' to enter Insert mode",
+        "",
+        "Now type: hello world",
+        "",
+        "Press Escape to exit insert mode",
+        "Then use h j k l to move",
+        "Move to the top and change 'Welcome' to 'Hello'",
+        "",
+        "Let's write some code:",
+        "function greet() {",
+        "\tconsole.log('Hello');",
+        "\treturn;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Hello to Vim!",
+        "",
+        "Use arrow keys to move down",
+        "",
+        "Press 'i' to enter Insert mode",
+        "",
+        "Now type: hello world",
+        "",
+        "Press Escape to exit insert mode",
+        "Then use h j k l to move",
+        "Move to the top and change 'Welcome' to 'Hello'",
+        "",
+        "Let's write some code:",
+        "function greet() {",
+        "\tconsole.log('Hello');",
+        "\treturn 'done';",
+        "}"
+      ]
+    }
+  ]
+}

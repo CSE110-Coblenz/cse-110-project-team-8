@@ -18,8 +18,8 @@ describe("DualGridView", () => {
         leftGrid = VimGrid.createGridFromText(["left", "grid"], 4);
         rightGrid = VimGrid.createGridFromText(["right", "grid"], 5);
 
-        leftGridView = new GridView(leftGrid, 0);
-        rightGridView = new GridView(rightGrid, window.innerWidth / 2);
+        leftGridView = new GridView(leftGrid, 400, 300);
+        rightGridView = new GridView(rightGrid, 400, 300);
     });
 
     describe("constructor", () => {

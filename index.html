@@ -30,16 +30,17 @@
     <div class="logo">VimBeat</div>
     <nav>
       <button class="nav-btn" id="playBtn">Play Game</button>
-      <button class="nav-btn" id="leaderboardBtn">Leaderboards</button>
-      <button class="nav-btn" id="settingsBtn">Settings</button>
-      <button class="nav-btn" id="aboutBtn">About</button>
+      <button class="nav-btn" id="aboutBtn">About The Game</button>
+      <button class="nav-btn" id="resetBtn">Reset The Game</button>
     </nav>
     <div class="user-info">
-      <div class="avatar"></div>
-      <div>
-        <div class="username">VimMaster99</div>
-        <div class="stats">Score: 1,234 | Level: 7</div>
-        <button id="logoutBtn" class="logout">Log Out</button>
+      <div class="user-badge">
+        <p id="userWelcome" class="welcome">Welcome Back, Player!</p>
+        <div class="stats">
+          <span id="userScore">Score: --</span>
+          <span class="stat-sep">         </span>
+          <span id="userLevels">Level: --</span>
+        </div>
       </div>
     </div>
   </header>
@@ -70,31 +71,10 @@
       </div>
       <button id="mainPlayBtn" class="cta-btn">Let's Play!</button>
     </section>
-
-    <section class="leaderboard">
-      <h2>Top Players This Week</h2>
-      <table id="leaderboardTable">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Player Name</th>
-            <th>Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Dynamic content injected by main.ts -->
-        </tbody>
-      </table>
-      <button id="viewAllBtn" class="secondary-btn">View All Leaderboards</button>
-    </section>
   </main>
 
   <footer>
     <p>© 2025 VimBeat. All rights reserved.</p>
-    <div class="footer-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Service</a>
-    </div>
   </footer>
 
   <!-- Game container (hidden initially) -->

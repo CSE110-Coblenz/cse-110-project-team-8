@@ -63,7 +63,7 @@ export class GameView {
 
         // Update dual grid view position and size
         this.dualGridView.getGroup().y(this.SCORE_PANEL_HEIGHT);
-        this.dualGridView.resize(width, gridHeight);
+        this.dualGridView.updateLayout(width / 2, gridHeight);
 
         this.group.getLayer()?.draw();
     }

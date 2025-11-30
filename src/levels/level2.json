@@ -1,0 +1,23 @@
+{
+  "name": "Level 2: Functions",
+  "description": "Practice with function definitions",
+  "keyframes": [
+    {
+      "tMs": 0,
+      "state": [
+        "function test() {",
+        "\treturn 0",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function test(x) {",
+        "\treturn x * 2",
+        "}"
+      ]
+    }
+  ]
+}
+

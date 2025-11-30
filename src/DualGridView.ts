@@ -6,36 +6,37 @@ export class DualGridView {
   private leftGridView: GridView;
   private rightGridView: GridView;
   private modeLabel: Konva.Text;
+  private viewWidth: number;
+  private viewHeight: number;
   private leftGroup: Konva.Group;
   private rightGroup: Konva.Group;
 
-  constructor(leftGrid: GridView, rightGrid: GridView, width: number, height: number) {
+  constructor(leftGrid: GridView, rightGrid: GridView, viewWidth: number, viewHeight: number) {
     this.leftGridView = leftGrid;
     this.rightGridView = rightGrid;
+    this.viewWidth = viewWidth;
+    this.viewHeight = viewHeight;
 
     this.group = new Konva.Group();
 
-    // Position grids
     this.leftGroup = new Konva.Group({
         x: 0,
         y: 0,
-        width: width / 2,
-        height: height
     });
-
+    this.clipGroup(this.leftGroup, this.viewWidth, this.viewHeight);
+    
     this.rightGroup = new Konva.Group({
-        x: width / 2,
+        x: this.viewWidth,
         y: 0,
-        width: width / 2,
-        height: height
     });
+    this.clipGroup(this.rightGroup, this.viewWidth, this.viewHeight);
 
     this.modeLabel = new Konva.Text({
         text: 'Current Mode: ' + this.leftGridView.getVimGrid().getMode(),
         fontSize: 20,
         fill: 'blue',
-        x: width / 200,
-        y: height * 97/100
+        x: 16,
+        y: this.viewHeight - 40
     });
 
     // Add the inner grid groups directly to this group
@@ -69,26 +70,24 @@ export class DualGridView {
     this.modeLabel.getLayer()?.draw();
   }
 
-  resize(width: number, height: number): void {
-    const halfWidth = width / 2;
+  updateLayout(viewWidth: number, viewHeight: number) {
+    this.viewWidth = viewWidth;
+    this.viewHeight = viewHeight;
+    this.clipGroup(this.leftGroup, this.viewWidth, this.viewHeight);
+    if (typeof this.rightGroup.position === "function") {
+      this.rightGroup.position({ x: this.viewWidth, y: 0 });
+    }
+    this.clipGroup(this.rightGroup, this.viewWidth, this.viewHeight);
+    this.leftGridView.setViewport(viewWidth, viewHeight);
+    this.rightGridView.setViewport(viewWidth, viewHeight);
+    this.modeLabel.position({ x: 16, y: this.viewHeight - 40 });
+    this.group.getLayer()?.batchDraw();
+  }
 
-    // Update left group
-    this.leftGroup.width(halfWidth);
-    this.leftGroup.height(height);
-
-    // Update right group position and size
-    this.rightGroup.x(halfWidth);
-    this.rightGroup.width(halfWidth);
-    this.rightGroup.height(height);
-
-    // Update mode label position
-    this.modeLabel.x(width / 200);
-    this.modeLabel.y(height * 97/100);
-
-    // Update the individual grid views
-    this.leftGridView.resize(halfWidth, height);
-    this.rightGridView.resize(halfWidth, height);
-
-    this.group.getLayer()?.draw();
+  private clipGroup(group: Konva.Group, width: number, height: number) {
+    const clip = (group as unknown as { clip?: (config: { x: number; y: number; width: number; height: number }) => void }).clip;
+    if (typeof clip === "function") {
+      clip.call(group, { x: 0, y: 0, width, height });
+    }
   }
 }
