@@ -60,6 +60,9 @@ export class SimonSaysController {
     // Flash the input visually
     this.view.flashCommand(command, true);
 
+    // Update progress display
+    this.showInputPrompt();
+
     // Check if sequence is complete
     if (this.model.isSequenceComplete()) {
       // Correct! Increment round and move to next
