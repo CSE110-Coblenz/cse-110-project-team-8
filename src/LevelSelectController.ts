@@ -25,15 +25,15 @@ export class LevelSelectController extends VimController {
             return;
         }
 
-        // Prevent 'i' from switching to Insert mode
         const key = event.key.toLowerCase();
-        if (key === "i") {
+        
+        // Only allow up/down movement (j/k or arrow keys)
+        if (key === "j" || key === "k" || event.key === "ArrowDown" || event.key === "ArrowUp") {
+            super.handleInput(event);
             return;
         }
-
-        // Call parent handleInput for all other keys (movement, etc.)
-        // Parent will handle movement correctly in Normal mode
-        super.handleInput(event);
+        
+        // Ignore all other keys
     }
 }
 

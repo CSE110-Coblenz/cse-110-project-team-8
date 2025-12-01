@@ -11,9 +11,49 @@ export const TAB_SIZE = 4;          // Number of cells in a tab
 
 export class VimController {
     private grid: VimGrid;
+    private pendingCommand: string | null = null; // Partial multi-character command being built
+    private pendingCommandTimeout: number | null = null; // Timeout to clear pending command
 
     constructor(vimGrid: VimGrid) {
         this.grid = vimGrid;
+    }
+
+    /**
+     * Clears the pending command state.
+     */
+    private clearPendingCommand(): void {
+        if (this.pendingCommandTimeout !== null) {
+            clearTimeout(this.pendingCommandTimeout);
+            this.pendingCommandTimeout = null;
+        }
+        this.pendingCommand = null;
+    }
+
+    /**
+     * Sets up a pending command with a timeout.
+     */
+    private setPendingCommand(firstChar: string): void {
+        this.clearPendingCommand();
+        this.pendingCommand = firstChar;
+        // Clear pending state after 1 second
+        this.pendingCommandTimeout = window.setTimeout(() => {
+            this.pendingCommand = null;
+            this.pendingCommandTimeout = null;
+        }, 1000);
+    }
+
+    /**
+     * Handles a multi-character command. Returns true if the command was handled.
+     */
+    private handleMultiCharCommand(command: string): boolean {
+        switch (command) {
+            case "dd":
+                this.deleteLine();
+                return true;
+            // Add more multi-char commands here in the future
+            default:
+                return false;
+        }
     }
 
     handleInput(event: KeyboardEvent) {
@@ -52,7 +92,6 @@ export class VimController {
                 this.deleteText();
             }
             
-            const key = event.key.toLowerCase();
             if (event.key.length === 1) {
                 const char = event.key;
                 // Only insert if it's a printable ASCII character
@@ -62,6 +101,19 @@ export class VimController {
             }
         } else if (this.grid.getMode() === Mode.Normal) {
             const key = event.key.toLowerCase();
+            
+            // Handle pending multi-character command
+            if (this.pendingCommand !== null) {
+                const command = this.pendingCommand + key;
+                this.clearPendingCommand();
+                
+                if (this.handleMultiCharCommand(command)) {
+                    return; // Command was handled
+                }
+                // If not a valid multi-char command, continue to handle current key normally
+            }
+            
+            // Handle commands (including those that can start multi-char sequences)
             if (key === "i") {
                 this.grid.setMode(Mode.Insert);
                 this.adjustCursorForModeSwitch(Mode.Insert);
@@ -77,6 +129,9 @@ export class VimController {
                 this.grid.moveCursorBy(0, -this.grid.numCols);
             } else if (event.shiftKey && event.key === "4") {
                 this.grid.moveCursorBy(0, this.grid.numCols);
+            } else if (key === "d") {
+                this.setPendingCommand("d");
+                return;
             }
         }
     }
@@ -615,6 +670,21 @@ export class VimController {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Deletes the current line (dd command).
+     */
+    private deleteLine(): void {
+        const { row } = this.grid.getCursor();
+        if (row < 0 || row >= this.grid.numRows) return;
+        
+        this.grid.removeRow(row);
+        // Adjust cursor if we deleted the last line
+        if (this.grid.numRows > 0) {
+            const newRow = Math.min(row, this.grid.numRows - 1);
+            this.grid.setCursor(newRow, 0);
         }
     }
 }
