@@ -32,8 +32,8 @@ export class VimController {
         if (/^\d+$/.test(cmd)) {
             return true;
         }
-        // Commands that can be extended: d, y, c (for dd, yy, cc, etc.)
-        return cmd === "d" || cmd === "y" || cmd === "c";
+        // Commands that can be extended: d, y, c, g (for dd, yy, cc, gj, gk, etc.)
+        return cmd === "d" || cmd === "y" || cmd === "c" || cmd === "g";
     }
 
     /**
@@ -41,7 +41,7 @@ export class VimController {
      */
     private isRealCommand(cmd: string): boolean {
         return cmd === "i" || cmd === "h" || cmd === "j" || cmd === "k" || cmd === "l" || 
-               cmd === "0" || cmd === "dd";
+               cmd === "0" || cmd === "dd" || cmd === "gj" || cmd === "gk";
     }
 
     /**
@@ -91,6 +91,12 @@ export class VimController {
                 break;
             case "dd":
                 for (let i = 0; i < count; i++) this.deleteLine();
+                break;
+            case "gj":
+                for (let i = 0; i < count; i++) this.moveCursorDown();
+                break;
+            case "gk":
+                for (let i = 0; i < count; i++) this.moveCursorUp();
                 break;
         }
     }
