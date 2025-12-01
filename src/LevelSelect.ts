@@ -61,6 +61,9 @@ export class LevelSelect {
             lines.push(`${index + 1}. ${level.getName()}`);
         });
         
+        // Add exit option at the end
+        lines.push("Exit to Home");
+        
         // Find max width needed
         const maxWidth = Math.max(...lines.map(line => line.length), 30);
         const grid = VimGrid.createGridFromText(lines, maxWidth);
@@ -86,7 +89,15 @@ export class LevelSelect {
         lines.push("---");
         lines.push("");
         
-        if (levels.length > selectedIndex) {
+        if (selectedIndex === levels.length) {
+            // Exit option selected
+            lines.push("Selected:");
+            lines.push("Exit to Home");
+            lines.push("");
+            lines.push("Description:");
+            lines.push("Return to the main");
+            lines.push("homepage.");
+        } else if (levels.length > selectedIndex) {
             const selected = levels[selectedIndex];
             lines.push("Selected:");
             lines.push(selected.getName());
@@ -161,13 +172,21 @@ export class LevelSelect {
         }
         
         // Highlight the selected row
-        if (this.selectedLevelIndex >= 0 && this.selectedLevelIndex < this.leftGrid.numRows) {
-            const row = this.selectedLevelIndex;
-            const rightmost = this.leftGrid.findRightmostOccupied(row);
+        let rowToHighlight: number;
+        if (this.selectedLevelIndex === this.levels.length) {
+            // Exit option is at row levels.length
+            rowToHighlight = this.levels.length;
+        } else {
+            // Regular level
+            rowToHighlight = this.selectedLevelIndex;
+        }
+        
+        if (rowToHighlight >= 0 && rowToHighlight < this.leftGrid.numRows) {
+            const rightmost = this.leftGrid.findRightmostOccupied(rowToHighlight);
             if (rightmost >= 0) {
                 for (let c = 0; c <= rightmost; c++) {
-                    const cell = this.leftGrid.get(row, c);
-                    this.leftGrid.set(row, c, { ch: cell.ch, hl: "LevelSelect" });
+                    const cell = this.leftGrid.get(rowToHighlight, c);
+                    this.leftGrid.set(rowToHighlight, c, { ch: cell.ch, hl: "LevelSelect" });
                 }
             }
         }
@@ -202,8 +221,16 @@ export class LevelSelect {
         
         // Update selected index based on cursor position
         const cursor = this.leftGrid.getCursor();
-        const newIndex = Math.max(0, Math.min(cursor.row, this.levels.length - 1));
-        this.selectedLevelIndex = newIndex;
+        // Exit option is at index levels.length (after all levels)
+        const exitRowIndex = this.levels.length;
+        if (cursor.row >= exitRowIndex) {
+            // Selected the exit option
+            this.selectedLevelIndex = this.levels.length; // Use levels.length as the exit index
+        } else {
+            // Selected a level
+            const newIndex = Math.max(0, Math.min(cursor.row, this.levels.length - 1));
+            this.selectedLevelIndex = newIndex;
+        }
         
         // Keep cursor at column 0 for level list (only vertical navigation)
         if (cursor.col !== 0) {
@@ -223,10 +250,13 @@ export class LevelSelect {
     };
 
     /**
-     * Handles Enter key to start the selected level.
+     * Handles Enter key to start the selected level or exit.
      */
     private handleEnter = () => {
-        if (this.selectedLevelIndex >= 0 && this.selectedLevelIndex < this.levels.length) {
+        if (this.selectedLevelIndex === this.levels.length) {
+            // Exit option selected - return to homepage
+            this.exitToHome();
+        } else if (this.selectedLevelIndex >= 0 && this.selectedLevelIndex < this.levels.length) {
             const selectedLevel = this.levels[this.selectedLevelIndex];
             // Stop the level select menu
             this.stop();
@@ -234,6 +264,21 @@ export class LevelSelect {
             this.onLevelSelected(selectedLevel);
         }
     };
+    
+    /**
+     * Exits to the homepage.
+     */
+    private exitToHome(): void {
+        // Stop the level select menu
+        this.stop();
+        
+        // Hide game view and show homepage
+        document.body.classList.remove("game-active");
+        const gameRoot = document.getElementById("game-root");
+        if (gameRoot) {
+            gameRoot.classList.remove("active");
+        }
+    }
 
     /**
      * Handles window resize events.

@@ -2,11 +2,8 @@ import VimGrid from "./VimGrid.js";
 import Konva from "konva";
 import { GridView } from "./GridView.js";
 import { DualGridView } from "./DualGridView.js";
-import { GameView } from "./GameView.js";
 import { VimController, TAB_LEFT, TAB_MIDDLE, TAB_RIGHT } from "./VimController.js";
 import { PauseOverlay, PauseData } from "./pauseOverlay.js";
-import { LevelResult } from "./resultScreen.js";
-import { saveLevelResult } from "./progressStore.js";
 
 export interface Keyframe {
   tMs: number;
@@ -26,7 +23,6 @@ export class Level {
     private readonly id: string; // Level ID for scoring
     private stage: Konva.Stage | null = null;
     private controller: VimController | null = null;
-    private gameView: GameView | null = null;
     private dualView: DualGridView | null = null;
     private leftView: GridView | null = null;
     private rightView: GridView | null = null;
@@ -36,8 +32,7 @@ export class Level {
     private readonly HALF_VIEW_WIDTH = window.innerWidth / 2;
     private startTime: number = 0;
     private currentKeyframeIndex: number = 0;
-    private keyframeStartTime: number = 0; // Time when current keyframe started (resets on resume)
-    private keyframeElapsedActive: number = 0; // Accumulated active time for current keyframe (excluding paused time)
+    private keyframeStartTime: number = 0; // Time when current keyframe started
     private score: number = 0;
     private keyframeScores: number[] = [];
     private checkInterval: number | null = null;
@@ -100,17 +95,6 @@ export class Level {
      */
     getDescription(): string {
         return this.description;
-    }
-
-    /**
-     * Gets the level result for saving.
-     */
-    getLevelResult(): LevelResult {
-        return {
-            levelName: this.name,
-            score: this.score,
-            timeMs: this.levelElapsedActive
-        };
     }
 
     /**
@@ -300,10 +284,10 @@ export class Level {
         
         // Mark mismatches after input for real-time feedback
         this.markMismatches();
-
+        
         // Update the view after handling input
         this.leftView.update(this.leftGrid);
-        this.gameView?.updateModeLabel();
+        this.dualView?.updateModeLabel();
         const cursor = this.leftGrid.getCursor();
         this.leftView.setCursor(cursor.row, cursor.col);
     };
@@ -318,10 +302,6 @@ export class Level {
             const viewWidth = window.innerWidth / 2;
             const viewHeight = window.innerHeight;
             this.dualView?.updateLayout(viewWidth, viewHeight);
-        }
-
-        if (this.gameView) {
-            this.gameView.resize(window.innerWidth, window.innerHeight);
         }
     };
 
@@ -491,14 +471,6 @@ export class Level {
     private checkKeyframes = () => {
         if (!this.leftGrid || this.keyframes.length === 0 || this.isInBuffer || this.gamePaused) return;
 
-        // Update timer display
-        if (this.gameView && this.currentKeyframeIndex > 0 && this.currentKeyframeIndex < this.keyframes.length) {
-            const elapsedTime = this.getKeyframeElapsedTime();
-            const maxTime = this.getMaxTimeForKeyframe(this.currentKeyframeIndex);
-            const timeRemaining = Math.max(0, maxTime - elapsedTime);
-            this.gameView.updateTimer(timeRemaining, maxTime);
-        }
-
         // Mark mismatches for real-time feedback
         this.markMismatches();
 
@@ -510,7 +482,7 @@ export class Level {
             
             if (Level.isPerfectMatch(expectedGrid, this.leftGrid)) {
                 // Perfect match! Calculate score BEFORE any updates
-                const timeTaken = this.getKeyframeElapsedTime();
+                const timeTaken = Date.now() - this.keyframeStartTime;
                 const maxTime = this.getMaxTimeForKeyframe(this.currentKeyframeIndex);
                 const keyframeScore = Level.score(expectedGrid, this.leftGrid, timeTaken, maxTime);
                 
@@ -532,14 +504,10 @@ export class Level {
                 }
                 
                 if (isLastKeyframe) {
-                    // Last keyframe: flash longer (2 seconds), then save score and return to level select
+                    // Last keyframe: flash longer (2 seconds), then return to level select
                     this.pendingAdvance = window.setTimeout(() => {
                         this.pendingAdvance = null;
                         this.isInBuffer = false;
-
-                        // Save the level result to localStorage
-                        saveLevelResult(this.getLevelResult());
-
                         if (this.onComplete) {
                             this.onComplete();
                         }
@@ -560,7 +528,7 @@ export class Level {
         // Skip index 0 as it's the initial state, not a target
         if (this.currentKeyframeIndex > 0 && this.currentKeyframeIndex < this.keyframes.length) {
             const currentKeyframe = this.keyframes[this.currentKeyframeIndex];
-            const timeSinceKeyframeStart = this.getKeyframeElapsedTime();
+            const timeSinceKeyframeStart = Date.now() - this.keyframeStartTime;
             const maxTime = this.getMaxTimeForKeyframe(this.currentKeyframeIndex);
             
             if (timeSinceKeyframeStart >= maxTime) {
@@ -589,17 +557,13 @@ export class Level {
                 }
                 
                 if (isLastKeyframe) {
-                    // Last keyframe: update left grid, flash longer (2 seconds), then save score and return to level select
+                    // Last keyframe: update left grid, flash longer (2 seconds), then return to level select
                     if (!isPerfect) {
                         this.forceUpdateLeftGrid(expectedGrid);
                     }
                     this.pendingAdvance = window.setTimeout(() => {
                         this.pendingAdvance = null;
                         this.isInBuffer = false;
-
-                        // Save the level result to localStorage
-                        saveLevelResult(this.getLevelResult());
-
                         if (this.onComplete) {
                             this.onComplete();
                         }
@@ -690,18 +654,12 @@ export class Level {
             this.isInBuffer = false; // Release buffer if at end
             return;
         }
-
+        
         this.currentKeyframeIndex++;
         this.keyframeStartTime = Date.now();
-        this.keyframeElapsedActive = 0; // Reset accumulated time for new keyframe
         this.isInBuffer = false; // Release buffer after advancing
         this.updateRightGrid();
-
-        // Update the keyframe display
-        if (this.gameView) {
-            this.gameView.updateScore(this.score, this.currentKeyframeIndex, this.keyframes.length);
-        }
-
+        
         console.log(`Advanced to keyframe ${this.currentKeyframeIndex}`);
     }
 
@@ -712,16 +670,11 @@ export class Level {
         const oldScore = this.score;
         if (this.keyframeScores.length > 0) {
             const sum = this.keyframeScores.reduce((a, b) => a + b, 0);
-            this.score = Math.round(sum);
+            this.score = Math.round(sum / this.keyframeScores.length);
         }
-
+        
         if (this.score !== oldScore || this.keyframeScores.length === 1) {
             console.log(`Current score: ${this.score}`);
-        }
-
-        // Update the score display
-        if (this.gameView) {
-            this.gameView.updateScore(this.score, this.currentKeyframeIndex, this.keyframes.length);
         }
     }
 
@@ -796,17 +749,12 @@ export class Level {
 
             // Create the view (VimGridView)
             const viewWidth = window.innerWidth / 2;
-            const gridHeight = window.innerHeight - 80; // Subtract score panel height
-            this.leftView = new GridView(this.leftGrid, viewWidth, gridHeight);
-            this.rightView = new GridView(this.rightGrid, viewWidth, gridHeight);
+            const viewHeight = window.innerHeight;
+            this.leftView = new GridView(this.leftGrid, viewWidth, viewHeight);
+            this.rightView = new GridView(this.rightGrid, viewWidth, viewHeight);
+            this.dualView = new DualGridView(this.leftView, this.rightView, viewWidth, viewHeight);
 
-            // Create dual grid view with proper dimensions
-            this.dualView = new DualGridView(this.leftView, this.rightView, viewWidth, gridHeight);
-
-            // Create game view that contains both score display and dual grid view
-            this.gameView = new GameView(this.dualView, window.innerWidth, window.innerHeight);
-
-            layer.add(this.gameView.getGroup());
+            layer.add(this.dualView.getGroup());
             
             // Update views to ensure they're properly rendered
             this.leftView.update(this.leftGrid);
@@ -827,7 +775,6 @@ export class Level {
             // Start at index 1 since index 0 is the initial state, not a target
             this.currentKeyframeIndex = this.keyframes.length > 1 ? 1 : 0;
             this.keyframeStartTime = Date.now();
-            this.keyframeElapsedActive = 0;
             this.score = 0;
             this.keyframeScores = [];
             this.isInBuffer = false;
@@ -845,12 +792,7 @@ export class Level {
                 clearInterval(this.checkInterval);
             }
             this.checkInterval = window.setInterval(this.checkKeyframes, 100);
-
-            // Initialize score display
-            if (this.gameView) {
-                this.gameView.updateScore(0, this.currentKeyframeIndex, this.keyframes.length);
-            }
-
+            
             this.gameInitialized = true;
         } else {
             // Stage already initialized, but we need to reset state and update views
@@ -872,7 +814,6 @@ export class Level {
             // Start at index 1 since index 0 is the initial state, not a target
             this.currentKeyframeIndex = this.keyframes.length > 1 ? 1 : 0;
             this.keyframeStartTime = Date.now();
-            this.keyframeElapsedActive = 0;
             this.score = 0;
             this.keyframeScores = [];
             this.isInBuffer = false;
@@ -945,8 +886,6 @@ export class Level {
      */
     private accumulateElapsedTime(): void {
         this.levelElapsedActive += Math.max(0, performance.now() - this.levelStartTime);
-        // Also accumulate keyframe elapsed time
-        this.keyframeElapsedActive += Math.max(0, Date.now() - this.keyframeStartTime);
     }
 
     /**
@@ -962,17 +901,6 @@ export class Level {
     }
 
     /**
-     * Gets the elapsed time for the current keyframe, excluding paused time.
-     * @returns Elapsed time in milliseconds
-     */
-    private getKeyframeElapsedTime(): number {
-        if (this.gamePaused) {
-            return this.keyframeElapsedActive;
-        }
-        return this.keyframeElapsedActive + Math.max(0, Date.now() - this.keyframeStartTime);
-    }
-
-    /**
      * Sets the pause state of the game.
      * @param paused - Whether the game should be paused
      */
@@ -982,8 +910,6 @@ export class Level {
             this.accumulateElapsedTime();
         } else {
             this.levelStartTime = performance.now();
-            // Reset keyframe start time when resuming
-            this.keyframeStartTime = Date.now();
         }
         this.gamePaused = paused;
         document.body.classList.toggle("game-paused", paused);

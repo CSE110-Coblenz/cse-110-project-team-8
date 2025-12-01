@@ -46,7 +46,7 @@ export class DualGridView {
     this.group.add(this.leftGroup);
     this.group.add(this.rightGroup);
     this.group.add(this.modeLabel);
-
+    
   }
 
   getGroup(): Konva.Group {
