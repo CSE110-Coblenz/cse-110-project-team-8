@@ -32,8 +32,10 @@ export class VimController {
         if (/^\d+$/.test(cmd)) {
             return true;
         }
-        // Commands that can be extended: d, y, c, g (for dd, yy, cc, gj, gk, etc.)
-        return cmd === "d" || cmd === "y" || cmd === "c" || cmd === "g";
+        // Commands that can be extended: d, y, c, g (for dd, yy, cc, gj, gk, gg, etc.)
+        // Check lowercase to handle both cases
+        const lowerCmd = cmd.toLowerCase();
+        return lowerCmd === "d" || lowerCmd === "y" || lowerCmd === "c" || lowerCmd === "g";
     }
 
     /**
@@ -41,7 +43,8 @@ export class VimController {
      */
     private isRealCommand(cmd: string): boolean {
         return cmd === "i" || cmd === "h" || cmd === "j" || cmd === "k" || cmd === "l" || 
-               cmd === "0" || cmd === "dd" || cmd === "gj" || cmd === "gk";
+               cmd === "0" || cmd === "dd" || cmd === "gj" || cmd === "gk" || cmd === "H" || cmd === "G" || 
+               cmd === "M" || cmd === "L" || cmd === "gg";
     }
 
     /**
@@ -98,7 +101,104 @@ export class VimController {
             case "gk":
                 for (let i = 0; i < count; i++) this.moveCursorUp();
                 break;
+            case "H":
+                // Jump to line 1 (since we don't do scrolling)
+                this.jumpToLine(1);
+                break;
+            case "M":
+                // Jump to middle line
+                this.jumpToLine(Math.floor(this.grid.numRows / 2) + 1);
+                break;
+            case "L":
+                // Jump to last line (same as G)
+                this.jumpToLine(0);
+                break;
+            case "gg":
+                if (count === 1) {
+                    this.jumpToLine(1);
+                } else {
+                    // For ngg where n > 1, treat same as G
+                    this.jumpToLine(count);
+                }
+                break;
+            case "G":
+                // Jump to line (count=1 means last line, otherwise jump to line count)
+                // For G, we want count=1 to go to last line (0), not line 1
+                if (count === 1) {
+                    this.jumpToLine(0);
+                } else {
+                    this.jumpToLine(count);
+                }
+                break;
         }
+    }
+
+    /**
+     * Jumps to the specified line number and positions cursor at leftmost non-whitespace.
+     * @param lineNumber - Line number to jump to (1-indexed, or 0 for last line)
+     */
+    private jumpToLine(lineNumber: number): void {
+        // If lineNumber is 0, jump to last line
+        // Otherwise, jump to lineNumber (1-indexed, so subtract 1)
+        const targetLine = (lineNumber === 0) 
+            ? this.grid.numRows - 1 
+            : Math.min(lineNumber - 1, this.grid.numRows - 1);
+        
+        // Clamp to valid range
+        const clampedLine = Math.max(0, Math.min(targetLine, this.grid.numRows - 1));
+        
+        // Find the leftmost non-whitespace character on the line (tabs count as whitespace)
+        let leftmostNonWhitespace = -1;
+        let rightmostWhitespace = -1;
+        let rightmostTabStart = -1; // Start column of rightmost tab
+        
+        for (let col = 0; col < this.grid.numCols; col++) {
+            const cell = this.grid.get(clampedLine, col);
+            if (cell && cell.ch !== undefined && cell.ch !== null) {
+                const ch = cell.ch;
+                // Check if it's a tab character
+                const isTab = ch === TAB_LEFT || ch === TAB_MIDDLE || ch === TAB_RIGHT;
+                // Check if it's whitespace (space, tab, etc.)
+                const isWhitespace = ch.trim() === "" || isTab;
+                
+                if (!isWhitespace) {
+                    // Found non-whitespace character
+                    if (leftmostNonWhitespace === -1) {
+                        leftmostNonWhitespace = col;
+                    }
+                } else {
+                    // Track rightmost whitespace
+                    rightmostWhitespace = col;
+                    
+                    // If it's a tab start, track it
+                    if (ch === TAB_LEFT) {
+                        rightmostTabStart = col;
+                    }
+                }
+            }
+        }
+        
+        // Determine target column:
+        // - If there's a non-whitespace character, move to leftmost non-whitespace
+        // - If there's only whitespace:
+        //   - If there's a tab, go to leftmost character in rightmost tab (TAB_LEFT)
+        //   - Otherwise, go to rightmost whitespace
+        let targetCol: number;
+        if (leftmostNonWhitespace >= 0) {
+            // Move to leftmost non-whitespace character
+            targetCol = leftmostNonWhitespace;
+        } else if (rightmostTabStart >= 0) {
+            // All whitespace with tabs - go to leftmost character in rightmost tab
+            targetCol = rightmostTabStart;
+        } else if (rightmostWhitespace >= 0) {
+            // All whitespace (no tabs) - go to rightmost whitespace
+            targetCol = rightmostWhitespace;
+        } else {
+            // Empty line - move to column 0
+            targetCol = 0;
+        }
+        
+        this.grid.setCursor(clampedLine, targetCol);
     }
 
     handleInput(event: KeyboardEvent) {
@@ -145,13 +245,13 @@ export class VimController {
                 }
             }
         } else if (this.grid.getMode() === Mode.Normal) {
-            const key = event.key.toLowerCase();
-            
             // Handle "$" (shift+4) - go to end of line (special case, doesn't go in buffer)
             if (event.shiftKey && event.key === "4") {
                 this.grid.moveCursorBy(0, this.grid.numCols);
                 return;
             }
+            
+            const key = event.key;
             
             // Handle "0" - it's a number if buffer has digits, otherwise it's a command
             if (key === "0") {
