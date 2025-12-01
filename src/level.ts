@@ -51,6 +51,44 @@ export class Level {
     private levelStartTime: number = 0; // When the current level session started (resets on resume)
     private levelElapsedActive: number = 0; // Accumulated active time (excluding paused time)
     private onExit?: () => void; // Callback when exiting the level
+    private correctSound: HTMLAudioElement | null = null;
+    private incorrectSound: HTMLAudioElement | null = null;
+    private completeSound: HTMLAudioElement | null = null;
+
+    /**
+     * Loads and plays a sound effect.
+     */
+    private playSound(soundName: 'correct' | 'incorrect' | 'complete'): void {
+        let sound: HTMLAudioElement | null = null;
+        
+        switch (soundName) {
+            case 'correct':
+                if (!this.correctSound) {
+                    this.correctSound = new Audio('./src/sound/correct.wav');
+                }
+                sound = this.correctSound;
+                break;
+            case 'incorrect':
+                if (!this.incorrectSound) {
+                    this.incorrectSound = new Audio('./src/sound/incorrect.wav');
+                }
+                sound = this.incorrectSound;
+                break;
+            case 'complete':
+                if (!this.completeSound) {
+                    this.completeSound = new Audio('./src/sound/complete.wav');
+                }
+                sound = this.completeSound;
+                break;
+        }
+        
+        if (sound) {
+            sound.currentTime = 0; // Reset to start
+            sound.play().catch(err => {
+                console.warn(`Failed to play ${soundName} sound:`, err);
+            });
+        }
+    }
 
     /**
      * Sets the completion callback.
@@ -536,6 +574,9 @@ export class Level {
                 // Start blinking feedback (green) - longer for last keyframe
                 this.startBlinkFeedback(true, isLastKeyframe);
                 
+                // Play correct sound
+                this.playSound('correct');
+                
                 // Cancel any pending advance
                 if (this.pendingAdvance !== null) {
                     clearTimeout(this.pendingAdvance);
@@ -546,6 +587,7 @@ export class Level {
                     this.pendingAdvance = window.setTimeout(() => {
                         this.pendingAdvance = null;
                         this.isInBuffer = false;
+                        this.playSound('complete');
                         if (this.onComplete) {
                             this.onComplete();
                         }
@@ -590,6 +632,13 @@ export class Level {
                 // Start blinking feedback (red if imperfect, green if perfect) - longer for last keyframe
                 this.startBlinkFeedback(isPerfect, isLastKeyframe);
                 
+                // Play sound based on match result
+                if (isPerfect) {
+                    this.playSound('correct');
+                } else {
+                    this.playSound('incorrect');
+                }
+                
                 // Cancel any pending advance
                 if (this.pendingAdvance !== null) {
                     clearTimeout(this.pendingAdvance);
@@ -603,6 +652,7 @@ export class Level {
                     this.pendingAdvance = window.setTimeout(() => {
                         this.pendingAdvance = null;
                         this.isInBuffer = false;
+                        this.playSound('complete');
                         if (this.onComplete) {
                             this.onComplete();
                         }
@@ -789,8 +839,10 @@ export class Level {
             this.controller = new VimController(this.leftGrid);
 
             // Create the view (VimGridView)
+            // Account for score panel height (80px) when calculating available height
+            const SCORE_PANEL_HEIGHT = 80;
             const viewWidth = window.innerWidth / 2;
-            const viewHeight = window.innerHeight;
+            const viewHeight = window.innerHeight - SCORE_PANEL_HEIGHT;
             this.leftView = new GridView(this.leftGrid, viewWidth, viewHeight);
             this.rightView = new GridView(this.rightGrid, viewWidth, viewHeight);
             this.dualView = new DualGridView(this.leftView, this.rightView, viewWidth, viewHeight);

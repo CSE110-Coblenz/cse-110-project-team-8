@@ -435,17 +435,24 @@ describe("VimController - Basic Movement", () => {
             grid.setMode(Mode.Insert);
         });
 
-        it("should only work in Insert mode, not Normal mode", () => {
+        it("should move cursor down in Normal mode, not add new line", () => {
+            grid.setMode(Mode.Normal);
+            grid = VimGrid.createGridFromText(["abc", "def"], 3);
+            controller = new VimController(grid);
             grid.setMode(Mode.Normal);
             const initialRows = grid.numRows;
             const initialCursor = grid.getCursor();
+            expect(initialCursor).toEqual({ row: 0, col: 0 });
 
             const event = new KeyboardEvent("keydown", { key: "Enter" });
             controller.handleInput(event);
 
             // Should not create a new line in Normal mode
             expect(grid.numRows).toBe(initialRows);
-            expect(grid.getCursor()).toEqual(initialCursor);
+            // Should move cursor down (same as ArrowDown)
+            const newCursor = grid.getCursor();
+            expect(newCursor.row).toBe(1);
+            expect(newCursor.col).toBe(0);
         });
 
         it("should insert a new empty line when cursor is at end of line", () => {
