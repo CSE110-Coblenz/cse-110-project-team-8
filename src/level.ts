@@ -2,6 +2,7 @@ import VimGrid from "./VimGrid.js";
 import Konva from "konva";
 import { GridView } from "./GridView.js";
 import { DualGridView } from "./DualGridView.js";
+import { GameView } from "./GameView.js";
 import { VimController, TAB_LEFT, TAB_MIDDLE, TAB_RIGHT } from "./VimController.js";
 import { PauseOverlay, PauseData } from "./pauseOverlay.js";
 
@@ -23,6 +24,7 @@ export class Level {
     private readonly id: string; // Level ID for scoring
     private stage: Konva.Stage | null = null;
     private controller: VimController | null = null;
+    private gameView: GameView | null = null;
     private dualView: DualGridView | null = null;
     private leftView: GridView | null = null;
     private rightView: GridView | null = null;
@@ -33,6 +35,8 @@ export class Level {
     private startTime: number = 0;
     private currentKeyframeIndex: number = 0;
     private keyframeStartTime: number = 0; // Time when current keyframe started
+    private keyframePausedTime: number = 0; // Accumulated paused time for current keyframe
+    private keyframePauseStart: number = 0; // When the current pause started (0 if not paused)
     private score: number = 0;
     private keyframeScores: number[] = [];
     private checkInterval: number | null = null;
@@ -287,7 +291,7 @@ export class Level {
         
         // Update the view after handling input
         this.leftView.update(this.leftGrid);
-        this.dualView?.updateModeLabel();
+        this.gameView?.updateModeLabel();
         const cursor = this.leftGrid.getCursor();
         this.leftView.setCursor(cursor.row, cursor.col);
     };
@@ -299,11 +303,36 @@ export class Level {
         if (this.stage) {
             this.stage.width(window.innerWidth);
             this.stage.height(window.innerHeight);
-            const viewWidth = window.innerWidth / 2;
-            const viewHeight = window.innerHeight;
-            this.dualView?.updateLayout(viewWidth, viewHeight);
+            this.gameView?.resize(window.innerWidth, window.innerHeight);
         }
     };
+
+    /**
+     * Updates the score display in the UI.
+     */
+    private updateScoreDisplay(): void {
+        if (this.gameView) {
+            this.gameView.updateScore(this.score, this.currentKeyframeIndex, this.keyframes.length);
+        }
+    }
+
+    /**
+     * Updates the timer display in the UI.
+     */
+    private updateTimerDisplay(): void {
+        if (this.gameView && this.currentKeyframeIndex > 0 && this.currentKeyframeIndex < this.keyframes.length) {
+            const maxTime = this.getMaxTimeForKeyframe(this.currentKeyframeIndex);
+            // Calculate elapsed time excluding paused time
+            let elapsedTime = Date.now() - this.keyframeStartTime;
+            if (this.keyframePauseStart > 0) {
+                // Currently paused - use pause start time
+                elapsedTime = this.keyframePauseStart - this.keyframeStartTime;
+            }
+            elapsedTime -= this.keyframePausedTime;
+            const timeRemaining = Math.max(0, maxTime - elapsedTime);
+            this.gameView.updateTimer(timeRemaining, maxTime);
+        }
+    }
 
     /**
      * Marks cells in the right grid (target) that don't match the left grid (player's input) with red text.
@@ -469,7 +498,15 @@ export class Level {
      * and advances to the next keyframe. Also checks for perfect matches.
      */
     private checkKeyframes = () => {
-        if (!this.leftGrid || this.keyframes.length === 0 || this.isInBuffer || this.gamePaused) return;
+        if (!this.leftGrid || this.keyframes.length === 0 || this.isInBuffer || this.gamePaused) {
+            // Still update timer even when paused/buffered
+            this.updateTimerDisplay();
+            return;
+        }
+        
+        // Update timer and score display
+        this.updateTimerDisplay();
+        this.updateScoreDisplay();
 
         // Mark mismatches for real-time feedback
         this.markMismatches();
@@ -482,7 +519,8 @@ export class Level {
             
             if (Level.isPerfectMatch(expectedGrid, this.leftGrid)) {
                 // Perfect match! Calculate score BEFORE any updates
-                const timeTaken = Date.now() - this.keyframeStartTime;
+                let timeTaken = Date.now() - this.keyframeStartTime;
+                timeTaken -= this.keyframePausedTime;
                 const maxTime = this.getMaxTimeForKeyframe(this.currentKeyframeIndex);
                 const keyframeScore = Level.score(expectedGrid, this.leftGrid, timeTaken, maxTime);
                 
@@ -528,7 +566,8 @@ export class Level {
         // Skip index 0 as it's the initial state, not a target
         if (this.currentKeyframeIndex > 0 && this.currentKeyframeIndex < this.keyframes.length) {
             const currentKeyframe = this.keyframes[this.currentKeyframeIndex];
-            const timeSinceKeyframeStart = Date.now() - this.keyframeStartTime;
+            let timeSinceKeyframeStart = Date.now() - this.keyframeStartTime;
+            timeSinceKeyframeStart -= this.keyframePausedTime;
             const maxTime = this.getMaxTimeForKeyframe(this.currentKeyframeIndex);
             
             if (timeSinceKeyframeStart >= maxTime) {
@@ -657,6 +696,8 @@ export class Level {
         
         this.currentKeyframeIndex++;
         this.keyframeStartTime = Date.now();
+        this.keyframePausedTime = 0;
+        this.keyframePauseStart = 0;
         this.isInBuffer = false; // Release buffer after advancing
         this.updateRightGrid();
         
@@ -753,8 +794,11 @@ export class Level {
             this.leftView = new GridView(this.leftGrid, viewWidth, viewHeight);
             this.rightView = new GridView(this.rightGrid, viewWidth, viewHeight);
             this.dualView = new DualGridView(this.leftView, this.rightView, viewWidth, viewHeight);
+            
+            // Create GameView which includes ScoreDisplay and DualGridView
+            this.gameView = new GameView(this.dualView, window.innerWidth, window.innerHeight);
 
-            layer.add(this.dualView.getGroup());
+            layer.add(this.gameView.getGroup());
             
             // Update views to ensure they're properly rendered
             this.leftView.update(this.leftGrid);
@@ -763,7 +807,12 @@ export class Level {
             // Set initial cursor position
             const cursor = this.leftGrid.getCursor();
             this.leftView.setCursor(cursor.row, cursor.col);
-            this.dualView.updateModeLabel();
+            this.gameView.updateModeLabel();
+            
+            // Initialize score and timer display
+            this.updateScoreDisplay();
+            this.updateTimerDisplay();
+            
             layer.draw();
 
             // Set up keyboard event listener
@@ -775,6 +824,8 @@ export class Level {
             // Start at index 1 since index 0 is the initial state, not a target
             this.currentKeyframeIndex = this.keyframes.length > 1 ? 1 : 0;
             this.keyframeStartTime = Date.now();
+            this.keyframePausedTime = 0;
+            this.keyframePauseStart = 0;
             this.score = 0;
             this.keyframeScores = [];
             this.isInBuffer = false;
@@ -814,6 +865,8 @@ export class Level {
             // Start at index 1 since index 0 is the initial state, not a target
             this.currentKeyframeIndex = this.keyframes.length > 1 ? 1 : 0;
             this.keyframeStartTime = Date.now();
+            this.keyframePausedTime = 0;
+            this.keyframePauseStart = 0;
             this.score = 0;
             this.keyframeScores = [];
             this.isInBuffer = false;
@@ -908,8 +961,15 @@ export class Level {
         if (paused === this.gamePaused) return;
         if (paused) {
             this.accumulateElapsedTime();
+            // Record when keyframe timer was paused
+            this.keyframePauseStart = Date.now();
         } else {
             this.levelStartTime = performance.now();
+            // Accumulate paused time for keyframe timer
+            if (this.keyframePauseStart > 0) {
+                this.keyframePausedTime += Date.now() - this.keyframePauseStart;
+                this.keyframePauseStart = 0;
+            }
         }
         this.gamePaused = paused;
         document.body.classList.toggle("game-paused", paused);

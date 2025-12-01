@@ -11,48 +11,87 @@ export const TAB_SIZE = 4;          // Number of cells in a tab
 
 export class VimController {
     private grid: VimGrid;
-    private pendingCommand: string | null = null; // Partial multi-character command being built
-    private pendingCommandTimeout: number | null = null; // Timeout to clear pending command
+    private commandBuffer: string = ""; // Command buffer (can include numbers and command chars)
 
     constructor(vimGrid: VimGrid) {
         this.grid = vimGrid;
     }
 
     /**
-     * Clears the pending command state.
+     * Clears the command buffer.
      */
-    private clearPendingCommand(): void {
-        if (this.pendingCommandTimeout !== null) {
-            clearTimeout(this.pendingCommandTimeout);
-            this.pendingCommandTimeout = null;
+    private clearCommandBuffer(): void {
+        this.commandBuffer = "";
+    }
+
+    /**
+     * Checks if a command string is a partial command (could become valid with more input).
+     */
+    private isPartialCommand(cmd: string): boolean {
+        // Numbers are partial (waiting for a command)
+        if (/^\d+$/.test(cmd)) {
+            return true;
         }
-        this.pendingCommand = null;
+        // Commands that can be extended: d, y, c (for dd, yy, cc, etc.)
+        return cmd === "d" || cmd === "y" || cmd === "c";
     }
 
     /**
-     * Sets up a pending command with a timeout.
+     * Checks if a command string is a valid real command.
      */
-    private setPendingCommand(firstChar: string): void {
-        this.clearPendingCommand();
-        this.pendingCommand = firstChar;
-        // Clear pending state after 1 second
-        this.pendingCommandTimeout = window.setTimeout(() => {
-            this.pendingCommand = null;
-            this.pendingCommandTimeout = null;
-        }, 1000);
+    private isRealCommand(cmd: string): boolean {
+        return cmd === "i" || cmd === "h" || cmd === "j" || cmd === "k" || cmd === "l" || 
+               cmd === "0" || cmd === "dd";
     }
 
     /**
-     * Handles a multi-character command. Returns true if the command was handled.
+     * Parses the repeat count from the beginning of a command string.
+     * Returns { count: number, command: string } where count is the repeat count and command is the remaining command.
      */
-    private handleMultiCharCommand(command: string): boolean {
-        switch (command) {
+    private parseRepeatCount(cmd: string): { count: number; command: string } {
+        let count = 1;
+        let command = cmd;
+        
+        // Extract leading digits
+        const match = cmd.match(/^(\d+)(.*)$/);
+        if (match) {
+            const parsedCount = parseInt(match[1], 10);
+            if (!isNaN(parsedCount) && parsedCount > 0) {
+                count = parsedCount;
+                command = match[2];
+            }
+        }
+        
+        return { count, command };
+    }
+
+    /**
+     * Handles a command string with repeat count.
+     */
+    private executeCommand(cmd: string, count: number): void {
+        switch (cmd) {
+            case "i":
+                this.grid.setMode(Mode.Insert);
+                this.adjustCursorForModeSwitch(Mode.Insert);
+                break;
+            case "h":
+                for (let i = 0; i < count; i++) this.moveCursorLeft();
+                break;
+            case "j":
+                for (let i = 0; i < count; i++) this.moveCursorDown();
+                break;
+            case "k":
+                for (let i = 0; i < count; i++) this.moveCursorUp();
+                break;
+            case "l":
+                for (let i = 0; i < count; i++) this.moveCursorRight();
+                break;
+            case "0":
+                this.grid.moveCursorBy(0, -this.grid.numCols);
+                break;
             case "dd":
-                this.deleteLine();
-                return true;
-            // Add more multi-char commands here in the future
-            default:
-                return false;
+                for (let i = 0; i < count; i++) this.deleteLine();
+                break;
         }
     }
 
@@ -102,36 +141,45 @@ export class VimController {
         } else if (this.grid.getMode() === Mode.Normal) {
             const key = event.key.toLowerCase();
             
-            // Handle pending multi-character command
-            if (this.pendingCommand !== null) {
-                const command = this.pendingCommand + key;
-                this.clearPendingCommand();
-                
-                if (this.handleMultiCharCommand(command)) {
-                    return; // Command was handled
-                }
-                // If not a valid multi-char command, continue to handle current key normally
+            // Handle "$" (shift+4) - go to end of line (special case, doesn't go in buffer)
+            if (event.shiftKey && event.key === "4") {
+                this.grid.moveCursorBy(0, this.grid.numCols);
+                return;
             }
             
-            // Handle commands (including those that can start multi-char sequences)
-            if (key === "i") {
-                this.grid.setMode(Mode.Insert);
-                this.adjustCursorForModeSwitch(Mode.Insert);
-            } else if (key === "h") {
-                this.moveCursorLeft();
-            } else if (key === "j") {
-                this.moveCursorDown();
-            } else if (key === "k") {
-                this.moveCursorUp();
-            } else if (key === "l") {
-                this.moveCursorRight();
-            } else if (key === "0") {
-                this.grid.moveCursorBy(0, -this.grid.numCols);
-            } else if (event.shiftKey && event.key === "4") {
-                this.grid.moveCursorBy(0, this.grid.numCols);
-            } else if (key === "d") {
-                this.setPendingCommand("d");
+            // Handle "0" - it's a number if buffer has digits, otherwise it's a command
+            if (key === "0") {
+                if (this.commandBuffer !== "" && /^\d+$/.test(this.commandBuffer)) {
+                    // Part of a number prefix (e.g., "10")
+                    this.commandBuffer += key;
+                    return;
+                } else {
+                    // Standalone "0" command - execute immediately
+                    this.executeCommand("0", 1);
+                    return;
+                }
+            }
+            
+            // 1. Modify buffer
+            this.commandBuffer += key;
+            
+            // 2. Strip (and store) count
+            const { count, command } = this.parseRepeatCount(this.commandBuffer);
+            
+            // 3. Handle buffer command
+            if (this.isRealCommand(command)) {
+                // Category 1: Real command -> handle accordingly and flush buffer
+                this.executeCommand(command, count);
+                this.clearCommandBuffer();
+            } else if (command === "" && count > 1) {
+                // Category 2: Just a number prefix (waiting for command) -> do nothing and wait for next input
                 return;
+            } else if (this.isPartialCommand(command)) {
+                // Category 2: Partial command -> do nothing and wait for next input
+                return;
+            } else {
+                // Category 3: Not a real command -> do nothing and flush buffer
+                this.clearCommandBuffer();
             }
         }
     }
