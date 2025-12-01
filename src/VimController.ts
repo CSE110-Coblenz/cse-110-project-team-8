@@ -45,7 +45,7 @@ export class VimController {
         if (cmd.length === 2 && cmd[0] === "x") {
             return true;
         }
-        return cmd === "i" || cmd === "h" || cmd === "j" || cmd === "k" || cmd === "l" || 
+        return cmd === "i" || cmd === "I" || cmd === "h" || cmd === "j" || cmd === "k" || cmd === "l" || 
                cmd === "0" || cmd === "dd" || cmd === "gj" || cmd === "gk" || cmd === "H" || cmd === "G" || 
                cmd === "M" || cmd === "L" || cmd === "gg" || cmd === "w" || cmd === "W" || 
                cmd === "e" || cmd === "E" || cmd === "b" || cmd === "B" || cmd === "ge" || cmd === "gE";
@@ -78,6 +78,26 @@ export class VimController {
     private executeCommand(cmd: string, count: number): void {
         switch (cmd) {
             case "i":
+                this.grid.setMode(Mode.Insert);
+                this.adjustCursorForModeSwitch(Mode.Insert);
+                break;
+            case "I":
+                // Move to beginning of line (column 0) and switch to Insert mode
+                const { row } = this.grid.getCursor();
+                this.grid.setCursor(row, 0);
+                
+                // Check if we're on a tab character and adjust for Insert mode
+                if (this.grid.inBounds(row, 0)) {
+                    const cell = this.grid.get(row, 0);
+                    if (this.isTabChar(cell.ch)) {
+                        // If we're on a tab, move to TAB_LEFT (correct position for Insert mode)
+                        const tabStart = this.findTabStart(row, 0);
+                        if (tabStart !== null) {
+                            this.grid.setCursor(row, tabStart);
+                        }
+                    }
+                }
+                
                 this.grid.setMode(Mode.Insert);
                 this.adjustCursorForModeSwitch(Mode.Insert);
                 break;
