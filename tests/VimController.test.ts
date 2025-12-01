@@ -1488,18 +1488,20 @@ describe("VimController - Basic Movement", () => {
             expect(grid.getCursor().col).toBe(2);
         });
 
-        it("should only insert in Insert mode, not Normal mode", () => {
+        it("should delete character with x in Normal mode", () => {
             grid = VimGrid.createGridFromText(["abc"], 3);
             controller = new VimController(grid);
             grid.setMode(Mode.Normal);
-            grid.setCursor(0, 1);
+            grid.setCursor(0, 1); // At 'b'
 
-            const initialContent = grid.get(0, 1).ch;
-            const event = new KeyboardEvent("keydown", { key: "x" });
-            controller.handleInput(event);
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
 
-            // Should not insert in Normal mode
-            expect(grid.get(0, 1).ch).toBe(initialContent);
+            // 'b' should be deleted, 'c' shifts left
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("c");
+            expect(grid.get(0, 2).ch).toBe("");
+            // Cursor should stay in place
+            expect(grid.getCursor().col).toBe(1);
         });
 
         it("should insert at beginning of line", () => {
@@ -1677,15 +1679,26 @@ describe("VimController - Basic Movement", () => {
             grid = VimGrid.createGridFromText(["abc"], 3);
             controller = new VimController(grid);
             grid.setMode(Mode.Insert);
-            grid.setCursor(0, 1);
+            grid.setCursor(0, 1); // At 'b'
 
+            // Insert 'x' at position 1: "abc" -> "axbc"
             controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("x");
+            expect(grid.get(0, 2).ch).toBe("b");
+            expect(grid.get(0, 3).ch).toBe("c");
+            
             controller.handleInput(new KeyboardEvent("keydown", { key: "Escape" })); // Switch to Normal
             expect(grid.getMode()).toBe(Mode.Normal);
 
-            // In Normal mode, 'x' should not insert
+            // In Normal mode, 'x' should delete the character
+            grid.setCursor(0, 2); // At 'b' (after the inserted 'x')
             controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
-            expect(grid.get(0, 2).ch).toBe("b"); // Should still be 'b', not 'x'
+            // After deleting 'b', 'c' shifts left: "axbc" -> "axc"
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("x");
+            expect(grid.get(0, 2).ch).toBe("c"); // 'c' shifted left after 'b' was deleted
+            expect(grid.get(0, 3).ch).toBe("");
         });
 
         it("should handle grid expansion during multiple insertions", () => {
@@ -2402,6 +2415,149 @@ describe("VimController - Word Motions", () => {
             controller.handleInput(new KeyboardEvent("keydown", { key: "2" }));
             controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
             expect(grid.getCursor().row).toBe(1); // Line 2 (0-indexed: row 1)
+        });
+    });
+
+    describe("x - delete character", () => {
+        it("should delete character at cursor and shift left", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("c");
+            expect(grid.get(0, 2).ch).toBe("");
+            // Cursor should stay in place
+            expect(grid.getCursor()).toEqual({ row: 0, col: 1 });
+        });
+
+        it("should delete character at end of line", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 2); // At 'c'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("b");
+            expect(grid.get(0, 2).ch).toBe("");
+            expect(grid.getCursor()).toEqual({ row: 0, col: 2 });
+        });
+
+        it("should handle empty cells correctly", () => {
+            grid = VimGrid.createGridFromText(["ab"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("");
+            expect(grid.get(0, 2).ch).toBe("");
+        });
+
+        it("should repeat with number prefix", () => {
+            grid = VimGrid.createGridFromText(["abcde"], 5);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "2" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            // Should delete 'b' and 'c'
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("d");
+            expect(grid.get(0, 2).ch).toBe("e");
+        });
+    });
+
+    describe("r{char} - replace character", () => {
+        it("should replace character at cursor", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("x");
+            expect(grid.get(0, 2).ch).toBe("c");
+            // Cursor should stay in place
+            expect(grid.getCursor()).toEqual({ row: 0, col: 1 });
+        });
+
+        it("should replace character at end of line", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 2); // At 'c'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "z" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("b");
+            expect(grid.get(0, 2).ch).toBe("z");
+        });
+
+        it("should replace empty cell", () => {
+            grid = VimGrid.createGridFromText(["ab"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 2); // At empty cell
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("b");
+            expect(grid.get(0, 2).ch).toBe("x");
+        });
+
+        it("should repeat with number prefix", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 0); // At 'a'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "3" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            // Should replace 'a', 'b', 'c' with 'x' and move cursor right after each except last
+            expect(grid.get(0, 0).ch).toBe("x");
+            expect(grid.get(0, 1).ch).toBe("x");
+            expect(grid.get(0, 2).ch).toBe("x");
+            // Cursor should be at the last replaced position (col 2)
+            expect(grid.getCursor()).toEqual({ row: 0, col: 2 });
+        });
+
+        it("should not replace if count would go out of bounds", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            const initialContent = grid.get(0, 1).ch;
+            
+            controller.handleInput(new KeyboardEvent("keydown", { key: "5" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            // Should not replace anything because 5 chars would go out of bounds
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe(initialContent); // Should still be 'b'
+            expect(grid.get(0, 2).ch).toBe("c");
+            // Cursor should not have moved
+            expect(grid.getCursor()).toEqual({ row: 0, col: 1 });
         });
     });
 });

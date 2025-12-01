@@ -32,23 +32,24 @@ export class VimController {
         if (/^\d+$/.test(cmd)) {
             return true;
         }
-        // Commands that can be extended: d, y, c, g, x (for dd, yy, cc, gj, gk, gg, ge, gE, x{char}, etc.)
-        // Only return true if it's exactly "d", "y", "c", "g", or "x" (case-sensitive)
-        return cmd === "d" || cmd === "y" || cmd === "c" || cmd === "g" || cmd === "x";
+        // Commands that can be extended: d, y, c, g, r (for dd, yy, cc, gj, gk, gg, ge, gE, r{char}, etc.)
+        // Only return true if it's exactly "d", "y", "c", "g", or "r" (case-sensitive)
+        return cmd === "d" || cmd === "y" || cmd === "c" || cmd === "g" || cmd === "r";
     }
 
     /**
      * Checks if a command string is a valid real command.
      */
     private isRealCommand(cmd: string): boolean {
-        // Check for x{char} pattern (x followed by exactly one character)
-        if (cmd.length === 2 && cmd[0] === "x") {
+        // Check for r{char} pattern (r followed by exactly one character)
+        if (cmd.length === 2 && cmd[0] === "r") {
             return true;
         }
         return cmd === "i" || cmd === "I" || cmd === "h" || cmd === "j" || cmd === "k" || cmd === "l" || 
                cmd === "0" || cmd === "dd" || cmd === "gj" || cmd === "gk" || cmd === "H" || cmd === "G" || 
                cmd === "M" || cmd === "L" || cmd === "gg" || cmd === "w" || cmd === "W" || 
-               cmd === "e" || cmd === "E" || cmd === "b" || cmd === "B" || cmd === "ge" || cmd === "gE";
+               cmd === "e" || cmd === "E" || cmd === "b" || cmd === "B" || cmd === "ge" || cmd === "gE" ||
+               cmd === "x";
     }
 
     /**
@@ -178,12 +179,13 @@ export class VimController {
             case "gE":
                 for (let i = 0; i < count; i++) this.moveWORDEndBackward();
                 break;
+            case "x":
+                for (let i = 0; i < count; i++) this.deleteChar();
+                break;
             default:
-                // Handle x{char} pattern - replace character at cursor
-                if (cmd.length === 2 && cmd[0] === "x") {
-                    for (let i = 0; i < count; i++) {
-                        this.replaceChar(cmd[1]);
-                    }
+                // Handle r{char} pattern - replace character at cursor
+                if (cmd.length === 2 && cmd[0] === "r") {
+                    this.replaceChars(cmd[1], count);
                 }
                 break;
         }
@@ -1154,6 +1156,79 @@ export class VimController {
         
         this.grid.set(row, col, { ch: char });
         this.grid.moveCursorBy(0, 1);
+    }
+
+    /**
+     * Deletes the character at the current cursor position and shifts characters on the right left.
+     */
+    private deleteChar(): void {
+        const { row, col } = this.grid.getCursor();
+        
+        // Ensure we're in bounds
+        if (!this.grid.inBounds(row, col)) {
+            return;
+        }
+        
+        // Check if we're on a tab character
+        const cell = this.grid.get(row, col);
+        if (this.isTabChar(cell.ch)) {
+            // Delete the entire tab
+            const tabStart = this.findTabStart(row, col);
+            if (tabStart !== null) {
+                const rightmost = this.grid.findRightmostOccupied(row);
+                if (rightmost >= 0) {
+                    // Shift all characters after the tab left by TAB_SIZE
+                    for (let c = tabStart; c <= rightmost; c++) {
+                        if (c + TAB_SIZE < this.grid.numCols) {
+                            const nextCell = this.grid.get(row, c + TAB_SIZE);
+                            this.grid.set(row, c, nextCell);
+                        } else {
+                            this.grid.set(row, c, { ch: '' });
+                        }
+                    }
+                }
+            }
+            return;
+        }
+        
+        // Normal character deletion - shift characters on the right left
+        const rightmost = this.grid.findRightmostOccupied(row);
+        if (rightmost >= 0 && col <= rightmost) {
+            for (let c = col; c <= rightmost; c++) {
+                if (c + 1 < this.grid.numCols) {
+                    const nextCell = this.grid.get(row, c + 1);
+                    this.grid.set(row, c, nextCell);
+                } else {
+                    this.grid.set(row, c, { ch: '' });
+                }
+            }
+        }
+    }
+
+    /**
+     * Replaces the next n characters starting at the current cursor position with the given character.
+     * Moves cursor right after each replacement except the last one.
+     * If any position would be out of bounds, does not perform any replacements.
+     */
+    private replaceChars(char: string, count: number): void {
+        const { row, col } = this.grid.getCursor();
+        
+        // Check if all positions are in bounds
+        for (let i = 0; i < count; i++) {
+            if (!this.grid.inBounds(row, col + i)) {
+                // If any position is out of bounds, don't do any replacements
+                return;
+            }
+        }
+        
+        // Replace each character and move right, except on the last one
+        for (let i = 0; i < count; i++) {
+            this.grid.set(row, col + i, { ch: char });
+            if (i < count - 1) {
+                // Move cursor right after each replacement except the last one
+                this.grid.moveCursorBy(0, 1);
+            }
+        }
     }
 
     /**

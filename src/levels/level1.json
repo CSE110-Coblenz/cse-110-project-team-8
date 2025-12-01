@@ -27,7 +27,7 @@
       ]
     },
     {
-      "tMs": 15000,
+      "tMs": 35000,
       "state": [
         "Welcome to Vim!",
         "",
