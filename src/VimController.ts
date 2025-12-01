@@ -32,10 +32,9 @@ export class VimController {
         if (/^\d+$/.test(cmd)) {
             return true;
         }
-        // Commands that can be extended: d, y, c, g (for dd, yy, cc, gj, gk, gg, etc.)
-        // Check lowercase to handle both cases
-        const lowerCmd = cmd.toLowerCase();
-        return lowerCmd === "d" || lowerCmd === "y" || lowerCmd === "c" || lowerCmd === "g";
+        // Commands that can be extended: d, y, c, g (for dd, yy, cc, gj, gk, gg, ge, gE, etc.)
+        // Only return true if it's exactly "d", "y", "c", or "g" (case-sensitive)
+        return cmd === "d" || cmd === "y" || cmd === "c" || cmd === "g";
     }
 
     /**
@@ -44,7 +43,8 @@ export class VimController {
     private isRealCommand(cmd: string): boolean {
         return cmd === "i" || cmd === "h" || cmd === "j" || cmd === "k" || cmd === "l" || 
                cmd === "0" || cmd === "dd" || cmd === "gj" || cmd === "gk" || cmd === "H" || cmd === "G" || 
-               cmd === "M" || cmd === "L" || cmd === "gg";
+               cmd === "M" || cmd === "L" || cmd === "gg" || cmd === "w" || cmd === "W" || 
+               cmd === "e" || cmd === "E" || cmd === "b" || cmd === "B" || cmd === "ge" || cmd === "gE";
     }
 
     /**
@@ -130,6 +130,30 @@ export class VimController {
                     this.jumpToLine(count);
                 }
                 break;
+            case "w":
+                for (let i = 0; i < count; i++) this.moveWordForward();
+                break;
+            case "W":
+                for (let i = 0; i < count; i++) this.moveWORDForward();
+                break;
+            case "e":
+                for (let i = 0; i < count; i++) this.moveWordEndForward();
+                break;
+            case "E":
+                for (let i = 0; i < count; i++) this.moveWORDEndForward();
+                break;
+            case "b":
+                for (let i = 0; i < count; i++) this.moveWordBackward();
+                break;
+            case "B":
+                for (let i = 0; i < count; i++) this.moveWORDBackward();
+                break;
+            case "ge":
+                for (let i = 0; i < count; i++) this.moveWordEndBackward();
+                break;
+            case "gE":
+                for (let i = 0; i < count; i++) this.moveWORDEndBackward();
+                break;
         }
     }
 
@@ -201,6 +225,498 @@ export class VimController {
         this.grid.setCursor(clampedLine, targetCol);
     }
 
+    /**
+     * Checks if a character is a word character (letter, digit, or underscore).
+     */
+    private isWordChar(ch: string): boolean {
+        if (!ch || ch.length === 0) return false;
+        return /[a-zA-Z0-9_]/.test(ch);
+    }
+
+    /**
+     * Checks if a character is a non-blank character (not space or tab).
+     */
+    private isNonBlank(ch: string): boolean {
+        if (!ch || ch.length === 0) return false;
+        // Check if it's a tab character
+        if (ch === TAB_LEFT || ch === TAB_MIDDLE || ch === TAB_RIGHT) return false;
+        return ch.trim() !== "";
+    }
+
+    /**
+     * Gets the character at a given position, or empty string if out of bounds.
+     */
+    private getCharAt(row: number, col: number): string {
+        if (!this.grid.inBounds(row, col)) return "";
+        return this.grid.get(row, col).ch || "";
+    }
+
+    /**
+     * Moves forward to the start of the next word (w).
+     */
+    private moveWordForward(): void {
+        const cursor = this.grid.getCursor();
+        let row = cursor.row;
+        let col = cursor.col;
+        
+        // If we're at the end of file, do nothing
+        if (row >= this.grid.numRows - 1 && col >= this.grid.numCols - 1) return;
+        
+        const currentCh = this.getCharAt(row, col);
+        
+        // If we're in a word, move to end of current word
+        if (this.isWordChar(currentCh)) {
+            // Move to end of current word
+            while (col < this.grid.numCols && this.isWordChar(this.getCharAt(row, col))) {
+                col++;
+            }
+        } else if (currentCh && currentCh.trim() !== "" && !this.isWordChar(currentCh)) {
+            // If we're on punctuation, it's its own word - skip it
+            col++;
+        }
+        
+        // Skip whitespace and find next word or punctuation
+        while (row < this.grid.numRows) {
+            while (col < this.grid.numCols) {
+                const ch = this.getCharAt(row, col);
+                if (this.isWordChar(ch)) {
+                    // Found start of next word
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                // If it's punctuation (non-whitespace, non-word), it's its own word
+                if (ch && ch.trim() !== "" && !this.isWordChar(ch)) {
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                col++;
+            }
+            // Move to next line
+            row++;
+            col = 0;
+            if (row >= this.grid.numRows) break;
+        }
+    }
+
+    /**
+     * Moves forward to the start of the next WORD (W).
+     */
+    private moveWORDForward(): void {
+        const cursor = this.grid.getCursor();
+        let row = cursor.row;
+        let col = cursor.col;
+        
+        // If we're at the end of file, do nothing
+        if (row >= this.grid.numRows - 1 && col >= this.grid.numCols - 1) return;
+        
+        // Skip current WORD if we're in one
+        const currentCh = this.getCharAt(row, col);
+        if (this.isNonBlank(currentCh)) {
+            // Move to end of current WORD
+            while (col < this.grid.numCols && this.isNonBlank(this.getCharAt(row, col))) {
+                col++;
+            }
+        }
+        
+        // Skip whitespace
+        while (row < this.grid.numRows) {
+            while (col < this.grid.numCols) {
+                const ch = this.getCharAt(row, col);
+                if (this.isNonBlank(ch)) {
+                    // Found start of next WORD
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                col++;
+            }
+            // Move to next line
+            row++;
+            col = 0;
+            if (row >= this.grid.numRows) break;
+        }
+    }
+
+    /**
+     * Moves forward to the end of the current/next word (e).
+     */
+    private moveWordEndForward(): void {
+        const cursor = this.grid.getCursor();
+        let row = cursor.row;
+        let col = cursor.col;
+        
+        // If we're at the end of file, do nothing
+        if (row >= this.grid.numRows - 1 && col >= this.grid.numCols - 1) return;
+        
+        const currentCh = this.getCharAt(row, col);
+        
+        // If we're in a word, check if we're already at the end
+        if (this.isWordChar(currentCh)) {
+            // Check if we're at the end of this word
+            const nextCh = this.getCharAt(row, col + 1);
+            if (!this.isWordChar(nextCh)) {
+                // Already at end of word, move forward to find next word
+                col++;
+            } else {
+                // Move to end of current word
+                while (col < this.grid.numCols - 1 && this.isWordChar(this.getCharAt(row, col + 1))) {
+                    col++;
+                }
+                this.grid.setCursor(row, col);
+                return;
+            }
+        } else {
+            // Not in a word, start searching from current position
+            col++;
+        }
+        
+        // Skip whitespace and find next word
+        while (row < this.grid.numRows) {
+            while (col < this.grid.numCols) {
+                const ch = this.getCharAt(row, col);
+                if (this.isWordChar(ch)) {
+                    // Found a word, move to its end
+                    while (col < this.grid.numCols - 1 && this.isWordChar(this.getCharAt(row, col + 1))) {
+                        col++;
+                    }
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                // If it's punctuation, it's its own word - stay on it
+                if (ch && ch.trim() !== "" && !this.isWordChar(ch)) {
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                col++;
+            }
+            // Move to next line
+            row++;
+            col = 0;
+            if (row >= this.grid.numRows) break;
+        }
+    }
+
+    /**
+     * Moves forward to the end of the current/next WORD (E).
+     */
+    private moveWORDEndForward(): void {
+        const cursor = this.grid.getCursor();
+        let row = cursor.row;
+        let col = cursor.col;
+        
+        // If we're at the end of file, do nothing
+        if (row >= this.grid.numRows - 1 && col >= this.grid.numCols - 1) return;
+        
+        const currentCh = this.getCharAt(row, col);
+        
+        // If we're in a WORD, check if we're already at the end
+        if (this.isNonBlank(currentCh)) {
+            // Check if we're at the end of this WORD
+            const nextCh = this.getCharAt(row, col + 1);
+            if (!this.isNonBlank(nextCh)) {
+                // Already at end of WORD, move forward to find next WORD
+                col++;
+            } else {
+                // Move to end of current WORD
+                while (col < this.grid.numCols - 1 && this.isNonBlank(this.getCharAt(row, col + 1))) {
+                    col++;
+                }
+                this.grid.setCursor(row, col);
+                return;
+            }
+        } else {
+            // Not in a WORD, start searching from current position
+            col++;
+        }
+        
+        // Skip whitespace and find next WORD
+        while (row < this.grid.numRows) {
+            while (col < this.grid.numCols) {
+                const ch = this.getCharAt(row, col);
+                if (this.isNonBlank(ch)) {
+                    // Found a WORD, move to its end
+                    while (col < this.grid.numCols - 1 && this.isNonBlank(this.getCharAt(row, col + 1))) {
+                        col++;
+                    }
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                col++;
+            }
+            // Move to next line
+            row++;
+            col = 0;
+            if (row >= this.grid.numRows) break;
+        }
+    }
+
+    /**
+     * Moves backward to the start of the current/previous word (b).
+     */
+    private moveWordBackward(): void {
+        const cursor = this.grid.getCursor();
+        let row = cursor.row;
+        let col = cursor.col;
+        
+        // If we're at the start of file, do nothing
+        if (row === 0 && col === 0) return;
+        
+        const currentCh = this.getCharAt(row, col);
+        
+        // If we're in a word, check if we're already at the start
+        if (this.isWordChar(currentCh)) {
+            // Check if we're at the start of this word
+            const prevCh = this.getCharAt(row, col - 1);
+            if (!this.isWordChar(prevCh)) {
+                // Already at start of word, move backward to find previous word
+                if (col > 0) {
+                    col--;
+                } else {
+                    row--;
+                    if (row < 0) return;
+                    col = this.grid.numCols - 1;
+                }
+            } else {
+                // Move to start of current word
+                while (col > 0 && this.isWordChar(this.getCharAt(row, col - 1))) {
+                    col--;
+                }
+                this.grid.setCursor(row, col);
+                return;
+            }
+        } else {
+            // Not in a word, move back one position
+            if (col > 0) {
+                col--;
+            } else {
+                row--;
+                if (row < 0) return;
+                col = this.grid.numCols - 1;
+            }
+        }
+        
+        // Skip whitespace and punctuation
+        while (row >= 0) {
+            while (col >= 0) {
+                const ch = this.getCharAt(row, col);
+                if (this.isWordChar(ch)) {
+                    // Found a word, move to its start
+                    while (col > 0 && this.isWordChar(this.getCharAt(row, col - 1))) {
+                        col--;
+                    }
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                // If it's punctuation, it's its own word - stay on it
+                if (ch && ch.trim() !== "" && !this.isWordChar(ch)) {
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                if (col === 0) break;
+                col--;
+            }
+            // Move to previous line
+            row--;
+            if (row < 0) break;
+            col = this.grid.numCols - 1;
+        }
+    }
+
+    /**
+     * Moves backward to the start of the current/previous WORD (B).
+     */
+    private moveWORDBackward(): void {
+        const cursor = this.grid.getCursor();
+        let row = cursor.row;
+        let col = cursor.col;
+        
+        // If we're at the start of file, do nothing
+        if (row === 0 && col === 0) return;
+        
+        const currentCh = this.getCharAt(row, col);
+        
+        // If we're in a WORD, check if we're already at the start
+        if (this.isNonBlank(currentCh)) {
+            // Check if we're at the start of this WORD
+            const prevCh = this.getCharAt(row, col - 1);
+            if (!this.isNonBlank(prevCh)) {
+                // Already at start of WORD, move backward to find previous WORD
+                if (col > 0) {
+                    col--;
+                } else {
+                    row--;
+                    if (row < 0) return;
+                    col = this.grid.numCols - 1;
+                }
+            } else {
+                // Move to start of current WORD
+                while (col > 0 && this.isNonBlank(this.getCharAt(row, col - 1))) {
+                    col--;
+                }
+                this.grid.setCursor(row, col);
+                return;
+            }
+        } else {
+            // Not in a WORD, move back one position
+            if (col > 0) {
+                col--;
+            } else {
+                row--;
+                if (row < 0) return;
+                col = this.grid.numCols - 1;
+            }
+        }
+        
+        // Skip whitespace
+        while (row >= 0) {
+            while (col >= 0) {
+                const ch = this.getCharAt(row, col);
+                if (this.isNonBlank(ch)) {
+                    // Found a WORD, move to its start
+                    while (col > 0 && this.isNonBlank(this.getCharAt(row, col - 1))) {
+                        col--;
+                    }
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                if (col === 0) break;
+                col--;
+            }
+            // Move to previous line
+            row--;
+            if (row < 0) break;
+            col = this.grid.numCols - 1;
+        }
+    }
+
+    /**
+     * Moves backward to the end of the previous word (ge).
+     */
+    private moveWordEndBackward(): void {
+        const cursor = this.grid.getCursor();
+        let row = cursor.row;
+        let col = cursor.col;
+        
+        // If we're at the start of file, do nothing
+        if (row === 0 && col === 0) return;
+        
+        const originalRow = row;
+        const originalCol = col;
+        const currentCh = this.getCharAt(row, col);
+        
+        // If we're in a word, move to its start (or before it)
+        if (this.isWordChar(currentCh)) {
+            // Move to start of current word
+            while (col > 0 && this.isWordChar(this.getCharAt(row, col - 1))) {
+                col--;
+            }
+            // Move back one more position to get past the word
+            if (col > 0) {
+                col--;
+            } else {
+                row--;
+                if (row < 0) return;
+                col = this.grid.numCols - 1;
+            }
+        } else {
+            // Not in a word, move back one position
+            if (col > 0) {
+                col--;
+            } else {
+                row--;
+                if (row < 0) return;
+                col = this.grid.numCols - 1;
+            }
+        }
+        
+        // Skip whitespace and find previous word
+        while (row >= 0) {
+            while (col >= 0) {
+                const ch = this.getCharAt(row, col);
+                if (this.isWordChar(ch)) {
+                    // Found a word, move to its end
+                    while (col < this.grid.numCols - 1 && this.isWordChar(this.getCharAt(row, col + 1))) {
+                        col++;
+                    }
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                // If it's punctuation, it's its own word - stay on it
+                if (ch && ch.trim() !== "" && !this.isWordChar(ch)) {
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                if (col === 0) break;
+                col--;
+            }
+            // Move to previous line
+            row--;
+            if (row < 0) break;
+            col = this.grid.numCols - 1;
+        }
+    }
+
+    /**
+     * Moves backward to the end of the previous WORD (gE).
+     */
+    private moveWORDEndBackward(): void {
+        const cursor = this.grid.getCursor();
+        let row = cursor.row;
+        let col = cursor.col;
+        
+        // If we're at the start of file, do nothing
+        if (row === 0 && col === 0) return;
+        
+        const originalRow = row;
+        const originalCol = col;
+        const currentCh = this.getCharAt(row, col);
+        
+        // If we're in a WORD, move to its start (or before it)
+        if (this.isNonBlank(currentCh)) {
+            // Move to start of current WORD
+            while (col > 0 && this.isNonBlank(this.getCharAt(row, col - 1))) {
+                col--;
+            }
+            // Move back one more position to get past the WORD
+            if (col > 0) {
+                col--;
+            } else {
+                row--;
+                if (row < 0) return;
+                col = this.grid.numCols - 1;
+            }
+        } else {
+            // Not in a WORD, move back one position
+            if (col > 0) {
+                col--;
+            } else {
+                row--;
+                if (row < 0) return;
+                col = this.grid.numCols - 1;
+            }
+        }
+        
+        // Skip whitespace and find previous WORD
+        while (row >= 0) {
+            while (col >= 0) {
+                const ch = this.getCharAt(row, col);
+                if (this.isNonBlank(ch)) {
+                    // Found a WORD, move to its end
+                    while (col < this.grid.numCols - 1 && this.isNonBlank(this.getCharAt(row, col + 1))) {
+                        col++;
+                    }
+                    this.grid.setCursor(row, col);
+                    return;
+                }
+                if (col === 0) break;
+                col--;
+            }
+            // Move to previous line
+            row--;
+            if (row < 0) break;
+            col = this.grid.numCols - 1;
+        }
+    }
+
     handleInput(event: KeyboardEvent) {
         // Ignore modifier key combinations
         if (event.ctrlKey || event.metaKey || event.altKey) {
@@ -251,6 +767,13 @@ export class VimController {
                 return;
             }
             
+            // Ignore modifier keys - they don't go in the buffer
+            if (event.key === "Shift" || event.key === "Control" || event.key === "Alt" || event.key === "Meta") {
+                return;
+            }
+            
+            // Get the actual character, using the key value which already accounts for Shift
+            // event.key already gives us the correct case (e.g., "E" for Shift+E, "e" for just E)
             const key = event.key;
             
             // Handle "0" - it's a number if buffer has digits, otherwise it's a command
@@ -266,15 +789,19 @@ export class VimController {
                 }
             }
             
-            // 1. Modify buffer
+            // 1. Modify buffer (only add the actual character, not modifier keys)
             this.commandBuffer += key;
             
             // 2. Strip (and store) count
             const { count, command } = this.parseRepeatCount(this.commandBuffer);
             
+            console.log(`Buffer: "${this.commandBuffer}", Parsed: count=${count}, command="${command}"`);
+            console.log(`isRealCommand("${command}"): ${this.isRealCommand(command)}, isPartialCommand("${command}"): ${this.isPartialCommand(command)}`);
+            
             // 3. Handle buffer command
             if (this.isRealCommand(command)) {
                 // Category 1: Real command -> handle accordingly and flush buffer
+                console.log(`Executing command: "${command}" with count: ${count}`);
                 this.executeCommand(command, count);
                 this.clearCommandBuffer();
             } else if (command === "" && count > 1) {
