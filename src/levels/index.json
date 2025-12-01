@@ -11,6 +11,10 @@
     {
       "id": "level3",
       "file": "level3.json"
+    },
+    {
+      "id": "level4",
+      "file": "level4.json"
     }
   ]
 }
