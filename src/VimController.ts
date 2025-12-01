@@ -32,15 +32,19 @@ export class VimController {
         if (/^\d+$/.test(cmd)) {
             return true;
         }
-        // Commands that can be extended: d, y, c, g (for dd, yy, cc, gj, gk, gg, ge, gE, etc.)
-        // Only return true if it's exactly "d", "y", "c", or "g" (case-sensitive)
-        return cmd === "d" || cmd === "y" || cmd === "c" || cmd === "g";
+        // Commands that can be extended: d, y, c, g, x (for dd, yy, cc, gj, gk, gg, ge, gE, x{char}, etc.)
+        // Only return true if it's exactly "d", "y", "c", "g", or "x" (case-sensitive)
+        return cmd === "d" || cmd === "y" || cmd === "c" || cmd === "g" || cmd === "x";
     }
 
     /**
      * Checks if a command string is a valid real command.
      */
     private isRealCommand(cmd: string): boolean {
+        // Check for x{char} pattern (x followed by exactly one character)
+        if (cmd.length === 2 && cmd[0] === "x") {
+            return true;
+        }
         return cmd === "i" || cmd === "h" || cmd === "j" || cmd === "k" || cmd === "l" || 
                cmd === "0" || cmd === "dd" || cmd === "gj" || cmd === "gk" || cmd === "H" || cmd === "G" || 
                cmd === "M" || cmd === "L" || cmd === "gg" || cmd === "w" || cmd === "W" || 
@@ -153,6 +157,14 @@ export class VimController {
                 break;
             case "gE":
                 for (let i = 0; i < count; i++) this.moveWORDEndBackward();
+                break;
+            default:
+                // Handle x{char} pattern - replace character at cursor
+                if (cmd.length === 2 && cmd[0] === "x") {
+                    for (let i = 0; i < count; i++) {
+                        this.replaceChar(cmd[1]);
+                    }
+                }
                 break;
         }
     }
@@ -1122,6 +1134,23 @@ export class VimController {
         
         this.grid.set(row, col, { ch: char });
         this.grid.moveCursorBy(0, 1);
+    }
+
+    /**
+     * Replaces the character at the current cursor position with the given character.
+     * If the cell is empty, it still sets the character (handles empty lines).
+     */
+    private replaceChar(char: string): void {
+        const { row, col } = this.grid.getCursor();
+        
+        // Ensure we're in bounds
+        if (!this.grid.inBounds(row, col)) {
+            return;
+        }
+        
+        // Replace the character at cursor position
+        // This works even if the cell is empty (handles empty lines)
+        this.grid.set(row, col, { ch: char });
     }
 
     // Insert a new line
