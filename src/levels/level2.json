@@ -1,23 +1,389 @@
 {
-  "name": "Level 2: Functions",
-  "description": "Practice with function definitions",
+  "name": "Level 2: Advanced Movement",
+  "description": "Master word motions and line jumps: e, E, w, W, b, B, ge, gE, G, gg",
   "keyframes": [
     {
       "tMs": 0,
       "state": [
-        "function test() {",
-        "\treturn 0",
-        "}"
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velit."
       ]
     },
     {
-      "tMs": 10000,
+      "tMs": 30000,
       "state": [
-        "function test(x) {",
-        "\treturn x * 2",
-        "}"
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velit."
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "",
+        "Lorum ipsum dolor sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velit."
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "",
+        "Lorum ipsum dolor sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velit."
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "",
+        "Lorum ipsum dolor sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite."
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "",
+        "Lorum ipsum dolor sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite."
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "",
+        "Lorum ipsam dolor sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite."
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "",
+        "Lorum ipsam dolor sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "",
+        "Lorum ipsam dolor fit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "",
+        "Lorum ipsam dolor fit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "",
+        "Lorum ipsam dolore fit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "",
+        "Lorum ipsam dolore fit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "",
+        "Lorum ipsam dolore sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "Use 'W' to move forward",
+        "(punctuation counts as part of word),",
+        "then change 'consectetur' to 'consectetura'",
+        "",
+        "Lorum ipsam dolore sit amet, consectetur adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "Use 'W' to move forward",
+        "(punctuation counts as part of word),",
+        "then change 'consectetur' to 'consectetura'",
+        "",
+        "Lorum ipsam dolore sit amet, consectetura adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "Use 'W' to move forward",
+        "(punctuation counts as part of word),",
+        "then change 'consectetur' to 'consectetura'",
+        "",
+        "Lorum ipsam dolore sit amet, consectetura adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'",
+        "Use 'B' to move backward",
+        "(punctuation counts as part of word),",
+        "then change 'amet' to 'ameta'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "Use 'W' to move forward",
+        "(punctuation counts as part of word),",
+        "then change 'consectetur' to 'consectetura'",
+        "",
+        "Lorum ipsam dolore sit ameta, consectetura adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'",
+        "Use 'B' to move backward",
+        "(punctuation counts as part of word),",
+        "then change 'amet' to 'ameta'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "Use 'W' to move forward",
+        "(punctuation counts as part of word),",
+        "then change 'consectetur' to 'consectetura'",
+        "Use 'E' to move to word end",
+        "(punctuation counts as part of word),",
+        "then change 'elit' to 'elite'",
+        "",
+        "Lorum ipsam dolore sit ameta, consectetura adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'",
+        "Use 'B' to move backward",
+        "(punctuation counts as part of word),",
+        "then change 'amet' to 'ameta'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "Use 'W' to move forward",
+        "(punctuation counts as part of word),",
+        "then change 'consectetur' to 'consectetura'",
+        "Use 'E' to move to word end",
+        "(punctuation counts as part of word),",
+        "then change 'elit' to 'elite'",
+        "",
+        "Lorum ipsam dolore sit ameta, consectetura adipiscing elite.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'",
+        "Use 'B' to move backward",
+        "(punctuation counts as part of word),",
+        "then change 'amet' to 'ameta'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "Use 'W' to move forward",
+        "(punctuation counts as part of word),",
+        "then change 'consectetur' to 'consectetura'",
+        "Use 'E' to move to word end",
+        "(punctuation counts as part of word),",
+        "then change 'elit' to 'elite'",
+        "",
+        "Lorum ipsam dolore sit ameta, consectetura adipiscing elite.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'",
+        "Use 'B' to move backward",
+        "(punctuation counts as part of word),",
+        "then change 'amet' to 'ameta'",
+        "Use 'gE' to move to previous word end",
+        "(punctuation counts as part of word),",
+        "then change 'elite' to 'elit'"
+      ]
+    },
+    {
+      "tMs": 30000,
+      "state": [
+        "Use 'gg' to jump to first line, then change 'Lorem' to 'Lorum'",
+        "Use 'G' to jump to last line, then change 'velit' to 'velite'",
+        "Use 'w' to move forward by word, then change 'ipsum' to 'ipsam'",
+        "Use 'e' to move to word end, then change 'dolor' to 'dolore'",
+        "Use 'W' to move forward",
+        "(punctuation counts as part of word),",
+        "then change 'consectetur' to 'consectetura'",
+        "Use 'E' to move to word end",
+        "(punctuation counts as part of word),",
+        "then change 'elit' to 'elite'",
+        "",
+        "Lorum ipsam dolore sit ameta, consectetura adipiscing elit.",
+        "Sed do eiusmod tempor incididunt ut labore et dolore magna.",
+        "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
+        "Duis aute irure dolor in reprehenderit in voluptate velite.",
+        "",
+        "Use 'b' to move backward by word, then change 'sit' to 'fit'",
+        "Use 'ge' to move to previous word end,",
+        "then change 'fit' to 'sit'",
+        "Use 'B' to move backward",
+        "(punctuation counts as part of word),",
+        "then change 'amet' to 'ameta'",
+        "Use 'gE' to move to previous word end",
+        "(punctuation counts as part of word),",
+        "then change 'elite' to 'elit'"
       ]
     }
   ]
 }
-

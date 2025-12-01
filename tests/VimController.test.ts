@@ -435,17 +435,24 @@ describe("VimController - Basic Movement", () => {
             grid.setMode(Mode.Insert);
         });
 
-        it("should only work in Insert mode, not Normal mode", () => {
+        it("should move cursor down in Normal mode, not add new line", () => {
+            grid.setMode(Mode.Normal);
+            grid = VimGrid.createGridFromText(["abc", "def"], 3);
+            controller = new VimController(grid);
             grid.setMode(Mode.Normal);
             const initialRows = grid.numRows;
             const initialCursor = grid.getCursor();
+            expect(initialCursor).toEqual({ row: 0, col: 0 });
 
             const event = new KeyboardEvent("keydown", { key: "Enter" });
             controller.handleInput(event);
 
             // Should not create a new line in Normal mode
             expect(grid.numRows).toBe(initialRows);
-            expect(grid.getCursor()).toEqual(initialCursor);
+            // Should move cursor down (same as ArrowDown)
+            const newCursor = grid.getCursor();
+            expect(newCursor.row).toBe(1);
+            expect(newCursor.col).toBe(0);
         });
 
         it("should insert a new empty line when cursor is at end of line", () => {
@@ -1488,18 +1495,20 @@ describe("VimController - Basic Movement", () => {
             expect(grid.getCursor().col).toBe(2);
         });
 
-        it("should only insert in Insert mode, not Normal mode", () => {
+        it("should delete character with x in Normal mode", () => {
             grid = VimGrid.createGridFromText(["abc"], 3);
             controller = new VimController(grid);
             grid.setMode(Mode.Normal);
-            grid.setCursor(0, 1);
+            grid.setCursor(0, 1); // At 'b'
 
-            const initialContent = grid.get(0, 1).ch;
-            const event = new KeyboardEvent("keydown", { key: "x" });
-            controller.handleInput(event);
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
 
-            // Should not insert in Normal mode
-            expect(grid.get(0, 1).ch).toBe(initialContent);
+            // 'b' should be deleted, 'c' shifts left
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("c");
+            expect(grid.get(0, 2).ch).toBe("");
+            // Cursor should stay in place
+            expect(grid.getCursor().col).toBe(1);
         });
 
         it("should insert at beginning of line", () => {
@@ -1677,15 +1686,26 @@ describe("VimController - Basic Movement", () => {
             grid = VimGrid.createGridFromText(["abc"], 3);
             controller = new VimController(grid);
             grid.setMode(Mode.Insert);
-            grid.setCursor(0, 1);
+            grid.setCursor(0, 1); // At 'b'
 
+            // Insert 'x' at position 1: "abc" -> "axbc"
             controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("x");
+            expect(grid.get(0, 2).ch).toBe("b");
+            expect(grid.get(0, 3).ch).toBe("c");
+            
             controller.handleInput(new KeyboardEvent("keydown", { key: "Escape" })); // Switch to Normal
             expect(grid.getMode()).toBe(Mode.Normal);
 
-            // In Normal mode, 'x' should not insert
+            // In Normal mode, 'x' should delete the character
+            grid.setCursor(0, 2); // At 'b' (after the inserted 'x')
             controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
-            expect(grid.get(0, 2).ch).toBe("b"); // Should still be 'b', not 'x'
+            // After deleting 'b', 'c' shifts left: "axbc" -> "axc"
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("x");
+            expect(grid.get(0, 2).ch).toBe("c"); // 'c' shifted left after 'b' was deleted
+            expect(grid.get(0, 3).ch).toBe("");
         });
 
         it("should handle grid expansion during multiple insertions", () => {
@@ -1825,6 +1845,726 @@ describe("VimController - Basic Movement", () => {
             controller.handleInput(new KeyboardEvent("keydown", { key: "i" }));
             controller.handleInput(new KeyboardEvent("keydown", { key: "y" }));
             expect(grid.get(0, 2).ch).toBe("y");
+        });
+    });
+});
+
+describe("VimController - Word Motions", () => {
+    let grid: VimGrid;
+    let controller: VimController;
+
+    describe("w - word forward", () => {
+        it("should move to start of next word", () => {
+            grid = VimGrid.createGridFromText(["hello world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'h'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 6 }); // Start of "world"
+        });
+
+        it("should treat punctuation as separate words", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'f'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 3 }); // Comma ','
+        });
+
+        it("should move from punctuation to next word", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 3); // Start at ','
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 5 }); // Start of "bar"
+        });
+
+        it("should skip whitespace between words", () => {
+            grid = VimGrid.createGridFromText(["a   b"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'a'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 4 }); // Start of "b"
+        });
+
+        it("should move to next line if at end of line", () => {
+            grid = VimGrid.createGridFromText(["hello", "world"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 2); // Middle of "hello"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 1, col: 0 }); // Start of "world"
+        });
+
+        it("should not move if already at end of file", () => {
+            grid = VimGrid.createGridFromText(["hello"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 4); // Last character
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 4 }); // Should not move
+        });
+    });
+
+    describe("W - WORD forward", () => {
+        it("should move to start of next WORD (non-blank sequence)", () => {
+            grid = VimGrid.createGridFromText(["hello world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'h'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "W" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 6 }); // Start of "world"
+        });
+
+        it("should treat punctuation as part of WORD", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'f'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "W" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 5 }); // Start of "bar" (skips "foo,")
+        });
+
+        it("should skip whitespace between WORDs", () => {
+            grid = VimGrid.createGridFromText(["a   b"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'a'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "W" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 4 }); // Start of "b"
+        });
+    });
+
+    describe("e - word end forward", () => {
+        it("should move to end of current word if in middle", () => {
+            grid = VimGrid.createGridFromText(["hello world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 2); // Middle of "hello"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "e" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 4 }); // End of "hello" ('o')
+        });
+
+        it("should move to end of next word if at end of current word", () => {
+            grid = VimGrid.createGridFromText(["hello world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 4); // End of "hello"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "e" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 10 }); // End of "world" ('d')
+        });
+
+        it("should treat punctuation as its own word", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'f'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "e" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 2 }); // End of "foo" ('o')
+        });
+
+        it("should move to end of next word if on punctuation", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 3); // On ','
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "e" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 7 }); // End of "bar" ('r')
+        });
+    });
+
+    describe("E - WORD end forward", () => {
+        it("should move to end of current WORD if in middle", () => {
+            grid = VimGrid.createGridFromText(["hello world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 2); // Middle of "hello"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "E" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 4 }); // End of "hello"
+        });
+
+        it("should include punctuation in WORD", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'f'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "E" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 3 }); // End of "foo," (comma)
+        });
+    });
+
+    describe("b - word backward", () => {
+        it("should move to start of previous word", () => {
+            grid = VimGrid.createGridFromText(["hello world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 8); // Middle of "world"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "b" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 6 }); // Start of "world" (first b moves to start of current word)
+            
+            controller.handleInput(new KeyboardEvent("keydown", { key: "b" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 0 }); // Start of "hello" (second b moves to previous word)
+        });
+
+        it("should treat punctuation as separate words", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 6); // Middle of "bar"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "b" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 5 }); // Start of "bar" (first b moves to start of current word)
+            
+            controller.handleInput(new KeyboardEvent("keydown", { key: "b" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 3 }); // Comma ',' (second b moves to previous word)
+        });
+
+        it("should move from punctuation to previous word", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 3); // On ','
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "b" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 0 }); // Start of "foo"
+        });
+
+        it("should not move if already at start of file", () => {
+            grid = VimGrid.createGridFromText(["hello"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "b" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 0 }); // Should not move
+        });
+    });
+
+    describe("B - WORD backward", () => {
+        it("should move to start of previous WORD", () => {
+            grid = VimGrid.createGridFromText(["hello world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 8); // Middle of "world"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "B" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 6 }); // Start of "world" (first B moves to start of current WORD)
+            
+            controller.handleInput(new KeyboardEvent("keydown", { key: "B" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 0 }); // Start of "hello" (second B moves to previous WORD)
+        });
+
+        it("should treat punctuation as part of WORD", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 6); // Middle of "bar"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "B" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 5 }); // Start of "bar" (first B moves to start of current WORD)
+            
+            controller.handleInput(new KeyboardEvent("keydown", { key: "B" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 0 }); // Start of "foo," (includes comma, second B moves to previous WORD)
+        });
+    });
+
+    describe("ge - word end backward", () => {
+        it("should move to end of previous word", () => {
+            grid = VimGrid.createGridFromText(["hello world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 8); // Middle of "world"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "e" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 4 }); // End of "hello" ('o')
+        });
+
+        it("should treat punctuation as separate words", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 6); // Middle of "bar"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "e" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 3 }); // Comma ','
+        });
+
+        it("should move from punctuation to end of previous word", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 3); // On ','
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "e" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 2 }); // End of "foo" ('o')
+        });
+
+        it("should not move if already at start of file", () => {
+            grid = VimGrid.createGridFromText(["hello"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "e" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 0 }); // Should not move
+        });
+    });
+
+    describe("gE - WORD end backward", () => {
+        it("should move to end of previous WORD", () => {
+            grid = VimGrid.createGridFromText(["hello world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 8); // Middle of "world"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "E" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 4 }); // End of "hello"
+        });
+
+        it("should include punctuation in WORD", () => {
+            grid = VimGrid.createGridFromText(["foo, bar"], 9);
+            controller = new VimController(grid);
+            grid.setCursor(0, 6); // Middle of "bar"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "E" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 3 }); // End of "foo," (comma)
+        });
+    });
+
+    describe("Word motions with numbers", () => {
+        it("should repeat w command with number prefix", () => {
+            grid = VimGrid.createGridFromText(["one two three four"], 17);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'o'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "2" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 8 }); // Start of "three"
+        });
+
+        it("should repeat e command with number prefix", () => {
+            grid = VimGrid.createGridFromText(["one two three"], 13);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'o'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "3" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "e" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 12 }); // End of "three" ('e')
+        });
+
+        it("should repeat b command with number prefix", () => {
+            grid = VimGrid.createGridFromText(["one two three"], 13);
+            controller = new VimController(grid);
+            grid.setCursor(0, 12); // End of "three"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "2" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "b" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 4 }); // Start of "two" (2b moves back 2 words from end of "three")
+        });
+    });
+
+    describe("Word motions with punctuation edge cases", () => {
+        it("should handle multiple punctuation characters", () => {
+            grid = VimGrid.createGridFromText(["foo,., bar"], 10);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'f'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 3 }); // First comma
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 4 }); // Period
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 5 }); // Second comma
+        });
+
+        it("should handle words with underscores", () => {
+            grid = VimGrid.createGridFromText(["foo_bar baz"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'f'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 8 }); // Start of "baz" (underscore is part of word)
+        });
+
+        it("should handle mixed word and punctuation", () => {
+            grid = VimGrid.createGridFromText(["hello,world"], 11);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start at 'h'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 5 }); // Comma
+            controller.handleInput(new KeyboardEvent("keydown", { key: "w" }));
+            expect(grid.getCursor()).toEqual({ row: 0, col: 6 }); // Start of "world"
+        });
+    });
+
+    describe("gg and G - line jumping", () => {
+        it("should move to first line with gg", () => {
+            grid = VimGrid.createGridFromText(["first", "second", "third"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(2, 2); // Middle of "third"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(0); // First line
+            expect(grid.getCursor().col).toBe(0); // Leftmost non-whitespace
+        });
+
+        it("should move to last line with G", () => {
+            grid = VimGrid.createGridFromText(["first", "second", "third"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start of "first"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(2); // Last line
+            expect(grid.getCursor().col).toBe(0); // Leftmost non-whitespace
+        });
+
+        it("should move to specified line with numbered gg", () => {
+            grid = VimGrid.createGridFromText(["line1", "line2", "line3", "line4", "line5"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start of "line1"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "3" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(2); // Line 3 (0-indexed: row 2)
+            expect(grid.getCursor().col).toBe(0); // Leftmost non-whitespace
+        });
+
+        it("should move to specified line with numbered G", () => {
+            grid = VimGrid.createGridFromText(["line1", "line2", "line3", "line4", "line5"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start of "line1"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "4" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(3); // Line 4 (0-indexed: row 3)
+            expect(grid.getCursor().col).toBe(0); // Leftmost non-whitespace
+        });
+
+        it("should clamp to last line if number exceeds total lines (gg)", () => {
+            grid = VimGrid.createGridFromText(["line1", "line2", "line3"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0);
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "5" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(2); // Last line (clamped)
+        });
+
+        it("should clamp to last line if number exceeds total lines (G)", () => {
+            grid = VimGrid.createGridFromText(["line1", "line2", "line3"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0);
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "10" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(2); // Last line (clamped)
+        });
+
+        it("should position at leftmost non-whitespace with gg", () => {
+            grid = VimGrid.createGridFromText(["  indented", "normal"], 10);
+            controller = new VimController(grid);
+            grid.setCursor(1, 0); // "normal"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(0);
+            expect(grid.getCursor().col).toBe(2); // Leftmost non-whitespace (after "  ")
+        });
+
+        it("should position at leftmost non-whitespace with G", () => {
+            grid = VimGrid.createGridFromText(["normal", "  indented"], 10);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // "normal"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(1);
+            expect(grid.getCursor().col).toBe(2); // Leftmost non-whitespace (after "  ")
+        });
+
+        it("should handle all whitespace line with gg", () => {
+            grid = VimGrid.createGridFromText(["normal", "     ", "other"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(2, 0); // "other"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(0);
+            expect(grid.getCursor().col).toBe(0); // Leftmost non-whitespace of "normal"
+        });
+
+        it("should handle all whitespace line with G", () => {
+            grid = VimGrid.createGridFromText(["normal", "     ", "other"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // "normal"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(2);
+            expect(grid.getCursor().col).toBe(0); // Leftmost non-whitespace of "other"
+        });
+
+        it("should handle empty line with gg", () => {
+            grid = VimGrid.createGridFromText(["first", "", "third"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(2, 0); // "third"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(0);
+            expect(grid.getCursor().col).toBe(0); // Leftmost non-whitespace of "first"
+        });
+
+        it("should handle empty line with G", () => {
+            grid = VimGrid.createGridFromText(["first", "", "third"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // "first"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(2);
+            expect(grid.getCursor().col).toBe(0); // Leftmost non-whitespace of "third"
+        });
+
+        it("should handle tabs in whitespace with gg", () => {
+            grid = VimGrid.createGridFromText(["\t\ttext", "normal"], 8);
+            controller = new VimController(grid);
+            grid.setCursor(1, 0); // "normal"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(0);
+            // Should position at leftmost non-whitespace (after tabs)
+            expect(grid.getCursor().col).toBeGreaterThan(0);
+        });
+
+        it("should handle tabs in whitespace with G", () => {
+            grid = VimGrid.createGridFromText(["normal", "\t\ttext"], 8);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // "normal"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(1);
+            // Should position at leftmost non-whitespace (after tabs)
+            expect(grid.getCursor().col).toBeGreaterThan(0);
+        });
+
+        it("should handle single line grid with gg", () => {
+            grid = VimGrid.createGridFromText(["single"], 6);
+            controller = new VimController(grid);
+            grid.setCursor(0, 3); // Middle of "single"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(0);
+            expect(grid.getCursor().col).toBe(0);
+        });
+
+        it("should handle single line grid with G", () => {
+            grid = VimGrid.createGridFromText(["single"], 6);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // Start of "single"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(0);
+            expect(grid.getCursor().col).toBe(0);
+        });
+
+        it("should handle large number prefix with gg", () => {
+            grid = VimGrid.createGridFromText(["line1", "line2", "line3"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0);
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "9" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "9" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(2); // Clamped to last line
+        });
+
+        it("should handle large number prefix with G", () => {
+            grid = VimGrid.createGridFromText(["line1", "line2", "line3"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0);
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "9" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "9" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(2); // Clamped to last line
+        });
+
+        it("should handle line 1 with numbered gg", () => {
+            grid = VimGrid.createGridFromText(["line1", "line2", "line3"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(2, 0); // "line3"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "1" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "g" }));
+            expect(grid.getCursor().row).toBe(0); // Line 1
+        });
+
+        it("should handle line 1 with numbered G", () => {
+            grid = VimGrid.createGridFromText(["line1", "line2", "line3"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(2, 0); // "line3"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "1" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(2); // Last line (1G with count=1 means last line, same as G)
+        });
+
+        it("should go to line 2 with 2G", () => {
+            grid = VimGrid.createGridFromText(["line1", "line2", "line3"], 5);
+            controller = new VimController(grid);
+            grid.setCursor(0, 0); // "line1"
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "2" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "G" }));
+            expect(grid.getCursor().row).toBe(1); // Line 2 (0-indexed: row 1)
+        });
+    });
+
+    describe("x - delete character", () => {
+        it("should delete character at cursor and shift left", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("c");
+            expect(grid.get(0, 2).ch).toBe("");
+            // Cursor should stay in place
+            expect(grid.getCursor()).toEqual({ row: 0, col: 1 });
+        });
+
+        it("should delete character at end of line", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 2); // At 'c'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("b");
+            expect(grid.get(0, 2).ch).toBe("");
+            expect(grid.getCursor()).toEqual({ row: 0, col: 2 });
+        });
+
+        it("should handle empty cells correctly", () => {
+            grid = VimGrid.createGridFromText(["ab"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("");
+            expect(grid.get(0, 2).ch).toBe("");
+        });
+
+        it("should repeat with number prefix", () => {
+            grid = VimGrid.createGridFromText(["abcde"], 5);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "2" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            // Should delete 'b' and 'c'
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("d");
+            expect(grid.get(0, 2).ch).toBe("e");
+        });
+    });
+
+    describe("r{char} - replace character", () => {
+        it("should replace character at cursor", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("x");
+            expect(grid.get(0, 2).ch).toBe("c");
+            // Cursor should stay in place
+            expect(grid.getCursor()).toEqual({ row: 0, col: 1 });
+        });
+
+        it("should replace character at end of line", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 2); // At 'c'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "z" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("b");
+            expect(grid.get(0, 2).ch).toBe("z");
+        });
+
+        it("should replace empty cell", () => {
+            grid = VimGrid.createGridFromText(["ab"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 2); // At empty cell
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe("b");
+            expect(grid.get(0, 2).ch).toBe("x");
+        });
+
+        it("should repeat with number prefix", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 0); // At 'a'
+
+            controller.handleInput(new KeyboardEvent("keydown", { key: "3" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            // Should replace 'a', 'b', 'c' with 'x' and move cursor right after each except last
+            expect(grid.get(0, 0).ch).toBe("x");
+            expect(grid.get(0, 1).ch).toBe("x");
+            expect(grid.get(0, 2).ch).toBe("x");
+            // Cursor should be at the last replaced position (col 2)
+            expect(grid.getCursor()).toEqual({ row: 0, col: 2 });
+        });
+
+        it("should not replace if count would go out of bounds", () => {
+            grid = VimGrid.createGridFromText(["abc"], 3);
+            controller = new VimController(grid);
+            grid.setMode(Mode.Normal);
+            grid.setCursor(0, 1); // At 'b'
+
+            const initialContent = grid.get(0, 1).ch;
+            
+            controller.handleInput(new KeyboardEvent("keydown", { key: "5" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "r" }));
+            controller.handleInput(new KeyboardEvent("keydown", { key: "x" }));
+
+            // Should not replace anything because 5 chars would go out of bounds
+            expect(grid.get(0, 0).ch).toBe("a");
+            expect(grid.get(0, 1).ch).toBe(initialContent); // Should still be 'b'
+            expect(grid.get(0, 2).ch).toBe("c");
+            // Cursor should not have moved
+            expect(grid.getCursor()).toEqual({ row: 0, col: 1 });
         });
     });
 });
