@@ -795,6 +795,12 @@ export class VimController {
                 }
             }
         } else if (this.grid.getMode() === Mode.Normal) {
+            // Handle Enter - same as ArrowDown in Normal mode
+            if (event.key === "Enter") {
+                this.moveCursorDown();
+                return;
+            }
+            
             // Handle "$" (shift+4) - go to end of line (special case, doesn't go in buffer)
             if (event.shiftKey && event.key === "4") {
                 this.grid.moveCursorBy(0, this.grid.numCols);
