@@ -1,8 +1,8 @@
 // Main entry point for Simon Says game - orchestrates MVC components
 
-import { SimonSaysModel } from "./simonSaysModel.js";
-import { SimonSaysView } from "./simonSaysView.js";
-import { SimonSaysController } from "./simonSaysController.js";
+import { SimonSaysModel } from "./SimonSaysModel.js";
+import { SimonSaysView } from "./SimonSaysView.js";
+import { SimonSaysController } from "./SimonSaysController.js";
 
 export class SimonSays {
   private controller: SimonSaysController;
