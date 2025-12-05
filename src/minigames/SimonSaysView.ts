@@ -1,7 +1,7 @@
 // View: Handles all visual rendering using Konva
 
 import Konva from "konva";
-import { Command } from "./simonSaysModel.js";
+import { Command } from "./SimonSaysModel.js";
 
 export class SimonSaysView {
   private stage: Konva.Stage | null = null;

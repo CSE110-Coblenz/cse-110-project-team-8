@@ -1,0 +1,112 @@
+{
+  "keyframes": [
+    {
+      "tMs": 0,
+      "state": [
+        "function hello() {",
+        "\tconsole.log('Hello, world!')",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello() {",
+        "\tconsole.log('Hello, world!')",
+        "\treturn true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello(name) {",
+        "\tconsole.log('Hello, world!')",
+        "\treturn true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello(name) {",
+        "\tconsole.log('Hello, ' + name + '!')",
+        "\treturn true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello(name) {",
+        "\tif (!name) {",
+        "\t\tname = 'world';",
+        "\t}",
+        "\tconsole.log('Hello, ' + name + '!')",
+        "\treturn true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello(name) {",
+        "\tif (!name) {",
+        "\t\tname = 'world';",
+        "\t}",
+        "\tconst message = 'Hello, ' + name + '!';",
+        "\tconsole.log(message);",
+        "\treturn true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello(name) {",
+        "\tif (!name) {",
+        "\t\tname = 'world';",
+        "\t}",
+        "\tconst message = `Hello, ${name}!`;",
+        "\tconsole.log(message);",
+        "\treturn true;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello(name) {",
+        "\tif (!name) {",
+        "\t\tname = 'world';",
+        "\t}",
+        "\tconst message = `Hello, ${name}!`;",
+        "\tconsole.log(message);",
+        "\treturn message;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello(name = 'world') {",
+        "\tconst message = `Hello, ${name}!`;",
+        "\tconsole.log(message);",
+        "\treturn message;",
+        "}"
+      ]
+    },
+    {
+      "tMs": 10000,
+      "state": [
+        "function hello(name = 'world') {",
+        "\tconst message = `Hello, ${name}!`;",
+        "\tconsole.log(message);",
+        "\treturn message;",
+        "}",
+        "",
+        "hello('Vim');"
+      ]
+    }
+  ]
+}

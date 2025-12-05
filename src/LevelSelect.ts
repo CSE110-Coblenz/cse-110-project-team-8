@@ -39,16 +39,16 @@ export class LevelSelect {
      * Loads the level index and instantiates all Level objects.
      */
     static async loadLevels(): Promise<Level[]> {
-        const response = await fetch("/src/levels/index.json");
+        const response = await fetch("/levels/index.json");
         const levelIndex = await response.json() as LevelIndex;
-        
+
         // Load all levels with their IDs
         const levels = await Promise.all(
-            levelIndex.levels.map(entry => 
-                Level.fromFile(`/src/levels/${entry.file}`, undefined, entry.id)
+            levelIndex.levels.map(entry =>
+                Level.fromFile(`/levels/${entry.file}`, undefined, entry.id)
             )
         );
-        
+
         return levels;
     }
 

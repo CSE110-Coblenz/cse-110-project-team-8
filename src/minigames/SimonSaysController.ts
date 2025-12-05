@@ -1,7 +1,7 @@
 // Controller: Handles user input and coordinates Model and View
 
-import { SimonSaysModel } from "./simonSaysModel.js";
-import { SimonSaysView } from "./simonSaysView.js";
+import { SimonSaysModel } from "./SimonSaysModel.js";
+import { SimonSaysView } from "./SimonSaysView.js";
 import { saveMinigameScore } from "../progressStore.js";
 
 export class SimonSaysController {
